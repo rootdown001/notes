@@ -59,11 +59,11 @@ export default App;
 
 # Props
 
-1. Pass props without commas... ` <NameFunc name="Lance" age={54} />`
-2. The component recieves as `props`... `export function NameFunc(props){...} `
+1. Pass props without commas... `<NameFunc name="Lance" age={54} />`
+2. The component recieves as `props`... `export function NameFunc(props){...}`
 3. Props is actually an obect, so call it as `props.name` or `props.age`
-4. Can recieve props destructured... `export function NameFunc({name, age}){...} `
-5. Can set a default in the destructuring... `export function NameFunc({name, age = 54}){...} `
+4. Can recieve props destructured... `export function NameFunc({name, age}){...}`
+5. Can set a default in the destructuring... `export function NameFunc({name, age = 54}){...}`
 6. If you pass a boolean prop without a value, it defaults to `true`
 7. If you pass a child, you access with `props.children`. `children` is a special term in React for this purpose
 
@@ -841,7 +841,7 @@ export default function Item({ entry }) {
 
 ### Rules for Hooks
 
-1.  Hooks can never be called **conditionally** or in **any other block than the function**.
+1. Hooks can never be called **conditionally** or in **any other block than the function**.
 
 - Why? Because React remembers hooks **by the order they were first called**
 - Example...
@@ -865,14 +865,14 @@ function App() {
   - If you had an `if` statement with a return above `useEffect` the `useEffect` might not get called each time. This would change the number of hooks rendered on component render
 - _Instead_ you can put `if` statements of `for` loops INSIDE of `useEffect`
 
-2.  Hooks can only be used inside of a) function components
-    b) custom hooks
+2. Hooks can only be used inside of a) function components
+   b) custom hooks
 
 </br>
 
 ## useRef Hook
 
-1.  `useRef` allows saving data between renders. Unlike `state` and `prop`, saving data in `useRef` does not call rerender
+1. `useRef` allows saving data between renders. Unlike `state` and `prop`, saving data in `useRef` does not call rerender
 
 - Assign a value, as in `useRef("Lance")`
 
@@ -957,7 +957,7 @@ export default App;
 
 ### Refs in Class Components
 
-1.  Use refs in class components to reference an element in HTML. Setup in constructor with `React.createRef()`. Example...
+1. Use refs in class components to reference an element in HTML. Setup in constructor with `React.createRef()`. Example...
 
 ```jsx
 this.inputRef = React.createRef();
@@ -1016,7 +1016,7 @@ class App extends React.Component {
 }
 ```
 
-2.  Don't even need Refs to save value that doesn't cause re-render in class components
+2. Don't even need Refs to save value that doesn't cause re-render in class components
 
 - just put `this.value =` in the constructor
 - can then change this outside of constructor to save a different value to the `this` property
@@ -1091,8 +1091,8 @@ export default App;
 
 ## `useCallback`
 
-1.  `useCallback` works like `useMemo` but for memorization of **FUNCTIONS**
-2.  `useCallback` memorizes the function
+1. `useCallback` works like `useMemo` but for memorization of **FUNCTIONS**
+2. `useCallback` memorizes the function
 
 - `useMemo` memorizes the RETURN of `useMemo`
 
@@ -1104,8 +1104,8 @@ export default App;
   - `useMemo` is for _performance_
   - `useCallback` is for wrapping functions so they can be used in a dependancy array
 
-4.  Note: Best to use `useCallback` to wrap function so function can be in `useEffect` INSTEAD OF referencing the values in the function in `useEffect` as an alternative to putting function in dependency array. This is because your functions can be stored somewhere else, or you may want to change function
-5.  Example... we DON'T want to do this below because `printName` is recreated each time component is re-run, which means the `useEffect` will always be re-run
+4. Note: Best to use `useCallback` to wrap function so function can be in `useEffect` INSTEAD OF referencing the values in the function in `useEffect` as an alternative to putting function in dependency array. This is because your functions can be stored somewhere else, or you may want to change function
+5. Example... we DON'T want to do this below because `printName` is recreated each time component is re-run, which means the `useEffect` will always be re-run
 
 ```jsx
 function printName() {
@@ -1173,17 +1173,17 @@ export default App;
 
 ## Custom Hooks
 
-1.  Function that contains other hooks inside of it to do your logic
-2.  Use when you see logic you are reusing
-3.  React knows it's a custom hook because it starts with `use`
-4.  Include one or more hooks in custom hook
-5.  Can return as an _array_ or an _object_
-6.  Generally we include it in a NEW file as `.js` (because doesn't have jsx). Then we import like other hooks... `import { useToggle } from "./useToggle"`
-7.  Anytime we put a `function` inside of a custom hook, it's a good idea to wrap function in a `useCallback`
+1. Function that contains other hooks inside of it to do your logic
+2. Use when you see logic you are reusing
+3. React knows it's a custom hook because it starts with `use`
+4. Include one or more hooks in custom hook
+5. Can return as an _array_ or an _object_
+6. Generally we include it in a NEW file as `.js` (because doesn't have jsx). Then we import like other hooks... `import { useToggle } from "./useToggle"`
+7. Anytime we put a `function` inside of a custom hook, it's a good idea to wrap function in a `useCallback`
 
 - That way if function is used in a `useEffect` ets, the user doesn't have to worry about doing that themselves
 
-8.  Example... We use this toggle logic a lot...
+8. Example... We use this toggle logic a lot...
 
 ```jsx
 function App() {
@@ -1219,7 +1219,7 @@ function useToggle(initialValue) {
 - we then set our `useToggle` as `const [isDarkMode, toggleDarkMode] = useToggle(false)`
 - In jsx, we just call `onClick={toggleDarkMode}` instead of other code
 
-9.  Another example... we use this setName logic a lot
+9. Another example... we use this setName logic a lot
 
 ```jsx
 function App() {
@@ -1255,7 +1255,7 @@ function useInputValue(initialValue) {
 
 - Note that this returns an object. So now we can just spread in out `<input>` as <input {...nameInput} />
 
-9.  Full example...
+9. Full example...
 
 ```jsx
 import { useState } from "react";
@@ -1312,7 +1312,7 @@ export default App;
 
 # Local Storage in React
 
-(freeCodeCamp - "How to Use `localStorage` with React Hooks to Set and Get Items")[https://www.freecodecamp.org/news/how-to-use-localstorage-with-react-hooks-to-set-and-get-items/]
+[[freeCodeCamp - "How to Use `localStorage` with React Hooks to Set and Get Items"](https://www.freecodecamp.org/news/how-to-use-localstorage-with-react-hooks-to-set-and-get-items/)]
 
 `localStorage` is a **web storage object** allowing JS sites & apps to keep key-value pairs in a web browser.
 
