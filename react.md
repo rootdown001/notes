@@ -298,6 +298,9 @@ Good to use, but ONLY IF returning your result (not if doing functions, etc, in 
 
 1. Calls that function everytime a value from the array changes
 2. If you only want it to run on MOUNT, use empty array [] as dependency array
+
+- To run everytime there is a change to any state, leave off array
+
 3. Use useEffect any time want to change dom, like document title
 4. Use return () for cleanup (ex removing event listener) - it runs cleanup THEN the above part of function
 5. When component is un-mounted, all cleanup is run
@@ -1399,4 +1402,131 @@ export function useLocalStorage(storageKey, initialValue) {
 
   return [value, setValue];
 }
+```
+
+</br>
+
+# Forms
+
+## Forms - Form Basics
+
+Creating forms inside of React
+
+- usually you WANT to use a form for accessibility
+
+Topics:
+
+1.  If your `<input>` is not in a form, then hitting `ENTER` will NOT submit form
+2.  Forms have really good accessibility features for screen readers
+3.  Default behavior for form is to REFRESH PAGE on enter or submit (this is because it expects it is sending to a server url)
+
+- We want to PREVENT default behavior
+
+  - REMOVE `onClick` from `<button>`
+  - ADD `onSubmit={...}` inside of form element
+  - In the function passed, ADD `e.preventDefault()`
+  - Example
+
+  ```jsx
+  function addNewTodo(e) {
+    e.preventDefault()
+    if (newTodoName) .......
+  }
+
+  <form onSubmit={addNewTodo} id="new-todo-form">
+  ....
+  ```
+
+4.  If you specify a `value={...}` and an `onChange={...}` then it is a **controlled input**
+
+- For **uncontrolled** can specify nothing, or `defaultValue={...}`
+
+5.  If working with checkboxes, use `checked={...}` and `onChange={...}`
+
+- For **uncontrolled** can specify nothing, or `defaultChecked`
+
+Inputs you can have inside of `<form>...</form>`
+
+1.  `<textarea>`
+
+- Work the same as an `<input>`. Can have
+  - `value="...."`
+  - `onChange={...}`
+  - `defaultValue="..."`
+
+2.  `<select>`
+
+- Inside of `<select>` you specify options (`<option value="1">1</option>`, etc)
+- Then in `<select>` you can specify `value="1"`
+- If you want to make it **uncontrolled**, can use `defaultValue`
+- Example...
+
+```jsx
+<select value="1" onChange={...}>
+  <option value="1">1</option>
+  <option value="2">2</option>
+  <option value="3">3</option>
+</select>
+```
+
+</br>
+
+## Forms - One Way Data Flow
+
+Data in Forms (& all of React) flows one way
+
+- Parent to child.......
+  - If you want to change state in a component, need to still do it with the setter
+  - To do this pass the function in props that can do this
+- True in all of React, but comes up a lot in forms b/c forms have so many inputs, etc, together
+- So ALL DATA FLOWS IN ONE DIRECTION - if you want to go the other direction, you need to trigger an event to let you interact with the state
+
+</br>
+
+## Forms - useState vs. useRef
+
+1.  If we are using `useState` and a **controlled input**, it will re-render everytime the input changes before hittin submit
+
+- Instead, can use `useRef` and **uncontrolled input**
+  - Leave `value` and `onChange` off of input
+  - ADD `ref={...}`
+- Again, THIS IS COMMON TO DO IN FORMS because we only need access to the value when something happens
+- Improves performance a little to use `useRef`
+- Example - `useRef` instead of `useState` (which is commented out)
+
+```jsx
+import { useRef, useState } from "react";
+
+function App() {
+  const nameRef = useRef();
+  // const [name, setName] = useState("");
+
+  function handleSubmit(e) {
+    e.preventDefault();
+    const name = nameRef.current.value;
+
+    if (name === "") return;
+
+    alert(`Name: ${name}`);
+  }
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <label htmlFor="name">Name</label>
+      <br />
+      <input id="name" ref={nameRef} />
+      {/*<input
+        type="text"
+        id="name"
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+  />*/}
+      <br />
+      <br />
+      <button>Alert Name</button>
+    </form>
+  );
+}
+
+export default App;
 ```
