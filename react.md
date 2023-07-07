@@ -30,22 +30,22 @@ export default App;
 
 - only use dash in jsx with data- or aria-
 
-| **Topic**                               | **HTML**                | **React**                                                              |
-| --------------------------------------- | ----------------------- | ---------------------------------------------------------------------- |
-| **Attributes**                          | dash                    | camelCase                                                              |
-| - _example_ -                           | - _tab-index_ -         | - _tabIndex_ -                                                         |
-| **Custom Data Attributes ( data-... )** | data-...                | data-...                                                               |
-| - _example_ -                           | - _data-date_ -         | - _data-date_ -                                                        |
-| **ARIA Attributes (aria-...)**          | aria-...                | aria-...                                                               |
-| - _example_ -                           | - _aria-label_ -        | - _aria-label_ -                                                       |
-| **class attribute**                     | class                   | className                                                              |
-| - _example_ -                           | - _class="project"_ -   | - _className="project"_ -                                              |
-| **for attribute**                       | for                     | htmlFor                                                                |
-| - _example_ -                           | - _for="id"_ -          | - _htmlFor="id"_ -                                                     |
-| **style attribute**                     | style = "...:...;"      | style={{ : }}                                                          |
-|                                         | note:                   | In React, the style is passed as object.                               |
-| - _example_ -                           | - style="color:blue;" - | - style={{ color: "blue" }} -                                          |
-|                                         | note:                   | Also, anything that would be in " " (that isn't a string), are in { }. |
+| **Topic**                               | **HTML**            | **React**                                                              |
+| --------------------------------------- | ------------------- | ---------------------------------------------------------------------- |
+| **Attributes**                          | dash                | camelCase                                                              |
+| _example_                               | _tab-index_         | _tabIndex_                                                             |
+| **Custom Data Attributes ( data-... )** | data-...            | data-...                                                               |
+| _example_                               | _data-date_         | _data-date_                                                            |
+| **ARIA Attributes (aria-...)**          | aria-...            | aria-...                                                               |
+| _example_                               | _aria-label_        | _aria-label_                                                           |
+| **class attribute**                     | class               | className                                                              |
+| _example_                               | _class="project"_   | _className="project"_                                                  |
+| **for attribute**                       | for                 | htmlFor                                                                |
+| _example_                               | _for="id"_          | _htmlFor="id"_                                                         |
+| **style attribute**                     | style = "...:...;"  | style={{ : }}                                                          |
+|                                         | note:               | In React, the style is passed as object.                               |
+| _example_                               | style="color:blue;" | style={{ color: "blue" }}                                              |
+|                                         | note:               | Also, anything that would be in " " (that isn't a string), are in { }. |
 
 </br>
 
@@ -65,7 +65,7 @@ export default App;
 4. Can recieve props destructured... `export function NameFunc({name, age}){...}`
 5. Can set a default in the destructuring... `export function NameFunc({name, age = 54}){...}`
 6. If you pass a boolean prop without a value, it defaults to `true`
-7. If you pass a child, you access with `props.children`. `children` is a special term in React for this purpose
+7. If you pass a child, you access with `props.children` - `children` is a special term in React for this purpose
 
 Example, if you pass a child like this...
 
@@ -1515,12 +1515,12 @@ function App() {
       <label htmlFor="name">Name</label>
       <br />
       <input id="name" ref={nameRef} />
-      {/*<input
-        type="text"
-        id="name"
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-  />*/}
+      // <input
+      //  type="text"
+      //  id="name"
+      //  value={name}
+      //  onChange={(e) => setName(e.target.value)}
+      // />
       <br />
       <br />
       <button>Alert Name</button>
@@ -1530,3 +1530,101 @@ function App() {
 
 export default App;
 ```
+
+2.  Choose whether to use `useState` oor `useRef`
+
+- If you need to use input AS CHANGES ARE MADE, `useState` is probably best to use
+- If you only need to use input after submit, `useRef` is probably best to use
+  </br>
+
+## Forms - Form Libraries
+
+Creating React Forms can be complicated. Most people use some sort of form library. There are some popular ones
+
+1.  React Hook Form
+
+- Most popular and updated a lot
+
+2.  Formik
+
+- Somewhat popular but hasn't be updated
+
+3.  React Final Form
+
+- Least popular and outdated
+
+### React Hook Form
+
+- He is using v7.43.2
+- Makes managing form easier
+- Installed with `npm install react-hook-form`
+
+1.  Library has react hook `useForm` that is used for 90% of cases
+
+    - returns an object with lots of information
+
+```jsx
+const {
+  register,
+  handleSubmit,
+  watch,
+  formState: { errors },
+} = useForm();
+```
+
+2.  `register` helps you set up all of the event listeners you need
+
+```jsx
+<input defaultValue="test" {...register("example")} />
+```
+
+- This gives us all of the events that we will need
+
+3.  `handleSubmit` is a function you call, and pass it another function, like `onSubmit`
+
+```jsx
+    <form onSubmit={handleSubmit(onSubmit)}>
+```
+
+- It takes the function (ex: `onSubmit`) and passes along all of the data from your form
+
+4.  Lets you do data validation from HTML validation. Ex...
+
+```jsx
+<input {...register("firstName", { required: true, maxLength: 20 })} />
+```
+
+5. Can integrate with external UI component libraries. Use `Controller` for this
+
+```jsx
+import { useForm, Controller } from "react-hook-form";
+```
+
+- The can wrap in `Controller` what you want to integrate
+- Example, can integrate controlled inputs
+
+```jsx
+return (
+  <form onSubmit={handleSubmit(onSubmit)}>
+    <Controller
+      name="checkbox"
+      control={control}
+      rules={{ required: true }}
+      render={({ field }) => <Checkbox {...field} />}
+    />
+  </form>
+);
+```
+
+6.  Has built in error handling
+
+```jsx
+    <input
+      {...register("mail", { required: "Email Address is required })}
+      aria-invalid={errors.mail ? "true" : "false" }
+    />
+```
+
+7.  Can do schema-based form validation
+
+- Using `Zod` is best
