@@ -570,7 +570,7 @@ export function StateForm() {
 
 </br>
 
-## Form Input with `useState`
+## Form Input with `useRef`
 
 ```jsx
 import { useRef, useState } from "react";
@@ -643,6 +643,609 @@ export function RefForm() {
         Submit
       </button>
     </form>
+  );
+}
+```
+
+</br>
+
+## react-hook-form
+
+`App.jsx`
+
+```jsx
+import { FormGroup } from "./FormGroup";
+import ReactSelect from "react-select";
+import "./styles.css";
+import { useController, useForm } from "react-hook-form";
+
+const COUNTRY_OPTIONS = [
+  { label: "United States", value: "US" },
+  { label: "India", value: "IN" },
+  { label: "Mexico", value: "MX" },
+];
+
+function App() {
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    control,
+  } = useForm();
+
+  const { field: countryField } = useController({
+    name: "country",
+    control,
+    rules: { required: { value: true, message: "Required" } },
+  });
+
+  function onSubmit(data) {
+    console.log(data);
+    alert("Success");
+  }
+
+  return (
+    <form onSubmit={handleSubmit(onSubmit)} className="form">
+      <FormGroup errorMessage={errors?.email?.message}>
+        <label className="label" htmlFor="email">
+          Email
+        </label>
+        <input
+          className="input"
+          type="email"
+          id="email"
+          {...register("email", {
+            required: { value: true, message: "Required" },
+            validate: (value) => {
+              if (!value.endsWith("@webdevsimplified.com")) {
+                return "Must end with @webdevsimplified.com";
+              }
+            },
+          })}
+        />
+      </FormGroup>
+      <FormGroup errorMessage={errors?.password?.message}>
+        <label className="label" htmlFor="password">
+          Password
+        </label>
+        <input
+          className="input"
+          type="password"
+          id="password"
+          {...register("password", {
+            required: { value: true, message: "Required" },
+            minLength: { value: 10, message: "Must be at least 10 characters" },
+            validate: {
+              hasLowerCase: (value) => {
+                if (!value.match(/[a-z]/)) {
+                  return "Must include at least 1 lowercase letter";
+                }
+              },
+              hasUpperCase: (value) => {
+                if (!value.match(/[A-Z]/)) {
+                  return "Must include at least 1 uppercase letter";
+                }
+              },
+              hasNumber: (value) => {
+                if (!value.match(/[0-9]/)) {
+                  return "Must include at least 1 number";
+                }
+              },
+            },
+          })}
+        />
+      </FormGroup>
+      <FormGroup errorMessage={errors?.country?.message}>
+        <label className="label" htmlFor="country">
+          Country
+        </label>
+        <ReactSelect
+          isClearable
+          classNamePrefix="react-select"
+          id="country"
+          options={COUNTRY_OPTIONS}
+          {...countryField}
+        />
+      </FormGroup>
+      <button className="btn" type="submit">
+        Submit
+      </button>
+    </form>
+  );
+}
+
+export default App;
+```
+
+`FormGroup.jsx`
+
+```jsx
+export function FormGroup({ errorMessage = "", children }) {
+  return (
+    <div className={`form-group ${errorMessage.length > 0 ? "error" : ""}`}>
+      {children}
+      {errorMessage.length > 0 && <div className="msg">{errorMessage}</div>}
+    </div>
+  );
+}
+```
+
+</br>
+
+## Basic `useReducer` example
+
+`Counter.jsx`
+
+```jsx
+import { useReducer } from "react";
+
+const ACTIONS = {
+  INCREMENT: "INCREMENT",
+  DECREMENT: "DECREMENT",
+  CHANGE_COUNT: "CHANGE_COUNT",
+  RESET: "RESET",
+};
+
+function reducer(count, action) {
+  switch (action.type) {
+    case ACTIONS.DECREMENT:
+      return count - 1;
+    case ACTIONS.INCREMENT:
+      return count + 1;
+    case ACTIONS.CHANGE_COUNT:
+      return count + action.payload.value;
+    case ACTIONS.RESET:
+      return 0;
+    default:
+      return count;
+  }
+}
+
+export default function Counter({ initialCount = 0 }) {
+  const [count, dispatch] = useReducer(reducer, initialCount);
+
+  return (
+    <>
+      <button onClick={() => dispatch({ type: ACTIONS.DECREMENT })}>-</button>
+      {count}
+      <button onClick={() => dispatch({ type: ACTIONS.INCREMENT })}>+</button>
+      <button onClick={() => dispatch({ type: ACTIONS.RESET })}>Reset</button>
+      <button
+        onClick={() =>
+          dispatch({ type: ACTIONS.CHANGE_COUNT, payload: { value: 5 } })
+        }
+      >
+        +5
+      </button>
+    </>
+  );
+}
+```
+
+</br>
+
+## `useReducer` (in `useFetch` for API hook)
+
+`App.jsx`
+
+```jsx
+import { useState, useEffect } from "react";
+import { useFetch } from "./useFetch";
+
+const URLS = {
+  USERS: "https://jsonplaceholder.typicode.com/users",
+  POSTS: "https://jsonplaceholder.typicode.com/posts",
+  COMMENTS: "https://jsonplaceholder.typicode.com/comments",
+};
+
+const OPTIONS = {
+  method: "POST",
+  body: JSON.stringify({ name: "Lance" }),
+  headers: { "Content-type": "application/json" },
+};
+
+function App() {
+  const [url, setUrl] = useState(URLS.USERS);
+
+  const { data, isLoading, isError } = useFetch(url);
+
+  return (
+    <>
+      <div>
+        <label>
+          <input
+            type="radio"
+            checked={url === URLS.USERS}
+            onChange={() => setUrl(URLS.USERS)}
+          />
+          Users
+        </label>
+        <label>
+          <input
+            type="radio"
+            checked={url === URLS.POSTS}
+            onChange={() => setUrl(URLS.POSTS)}
+          />
+          Posts
+        </label>
+        <label>
+          <input
+            type="radio"
+            checked={url === URLS.COMMENTS}
+            onChange={() => setUrl(URLS.COMMENTS)}
+          />
+          Comments
+        </label>
+      </div>
+      {isLoading ? (
+        <h1>Loading...</h1>
+      ) : isError ? (
+        <h1>Error</h1>
+      ) : (
+        <pre>{JSON.stringify(data, null, 2)}</pre>
+      )}
+    </>
+  );
+}
+
+export default App;
+```
+
+`useFetch.jsx`
+
+```jsx
+import { useEffect, useReducer, useState } from "react";
+
+const ACTIONS = {
+  FETCH_START: "FETCH_START",
+  FETCH_SUCCESS: "FETCH_SUCCESS",
+  FETCH_ERROR: "FETCH_ERROR",
+};
+
+function reducer(state, { type, payload }) {
+  switch (type) {
+    case ACTIONS.FETCH_START:
+      return {
+        isError: false,
+        isLoading: true,
+      };
+    case ACTIONS.FETCH_SUCCESS:
+      return {
+        data: payload.data,
+        isLoading: false,
+        isError: false,
+      };
+    case ACTIONS.FETCH_ERROR:
+      return {
+        isError: true,
+        isLoading: false,
+      };
+    default:
+      return state;
+  }
+}
+
+export function useFetch(myUrl, options = {}) {
+  const [state, dispatch] = useReducer(reducer, {
+    isError: false,
+    isLoading: true,
+  });
+  //  const [data, setData] = useState();
+  //  const [isError, setIsError] = useState(undefined);
+  //  const [isLoading, setIsLoading] = useState(undefined);
+
+  useEffect(() => {
+    dispatch({ type: ACTIONS.FETCH_START });
+    //    setData(undefined);
+    //    setIsError(undefined);
+    //    setIsLoading(true);
+
+    const controller = new AbortController();
+
+    fetch(myUrl, options, { signal: controller.signal })
+      .then((res) => {
+        if (res.status === 200 || res.status === 201) {
+          return res.json();
+        } else {
+          console.log("res: ", res);
+          return Promise.reject(res);
+        }
+      })
+      .then((data) => {
+        dispatch({ type: ACTIONS.FETCH_SUCCESS, payload: { data } });
+        // setData(data);
+      })
+      .catch((e) => {
+        if (e?.name === "AbortError") return;
+        dispatch({ type: ACTIONS.FETCH_ERROR });
+        // setIsError(e);
+      });
+    //  .finally(() => {
+    //  if (controller.signal.aborted) return;
+    //  setIsLoading(false);
+    //  });
+
+    return () => {
+      controller.abort();
+    };
+  }, [myUrl]);
+
+  return state;
+}
+```
+
+## `useContext`
+
+`App.jsx`
+
+```jsx
+import { useEffect, useState, createContext } from "react";
+import Child from "./Child";
+
+export const ThemeContext = createContext();
+
+function App() {
+  const [isDarkMode, setIsDarkMode] = useState(false);
+
+  function toggleTheme() {
+    setIsDarkMode((d) => !d);
+  }
+
+  useEffect(() => {
+    document.body.style.background = isDarkMode ? "#333" : "white";
+    document.body.style.color = isDarkMode ? "white" : "#333";
+  }, [isDarkMode]);
+
+  return (
+    <ThemeContext.Provider value={{ isDarkMode, toggleTheme }}>
+      <Child />
+      <p>Lorem ipsum</p>
+    </ThemeContext.Provider>
+  );
+}
+
+export default App;
+```
+
+`Child.jsx`
+
+```jsx
+import Grandchild from "./Grandchild";
+
+export default function Child() {
+  return (
+    <>
+      <Grandchild />
+    </>
+  );
+}
+```
+
+`Grandchild.jsx`
+
+```jsx
+import { useContext } from "react";
+import { ThemeContext } from "./App";
+
+export default function Grandchild() {
+  const { isDarkMode, toggleTheme } = useContext(ThemeContext);
+
+  return (
+    <>
+      <button
+        style={{
+          background: isDarkMode ? "white" : "#333",
+          color: isDarkMode ? "#333" : "white",
+          border: "none",
+          padding: ".5em",
+          borderRadius: ".25em",
+          cursor: "pointer",
+        }}
+        onClick={toggleTheme}
+      >
+        Toggle Theme
+      </button>
+    </>
+  );
+}
+```
+
+## Router without a Library
+
+`App.jsx`
+
+```jsx
+import About from "./pages/About";
+import Home from "./pages/Home";
+import Store from "./pages/Store";
+
+export default function App() {
+  let component;
+  switch (window.location.pathname) {
+    case "/":
+      component = <Home />;
+      break;
+    case "/about":
+      component = <About />;
+      break;
+    case "/store":
+      component = <Store />;
+      break;
+  }
+
+  return (
+    <>
+      <nav>
+        <ul>
+          <li>
+            <a href="/">Home</a>
+          </li>
+          <li>
+            <a href="/about">About</a>
+          </li>
+          <li>
+            <a href="/store">Store</a>
+          </li>
+        </ul>
+      </nav>
+      {component}
+    </>
+  );
+}
+```
+
+`Home.jsx`
+
+```jsx
+export default function Home() {
+  return <div>Home</div>;
+}
+```
+
+`About.jsx`
+
+```jsx
+export default function About() {
+  return <div>About</div>;
+}
+```
+
+`Stre.jsx`
+
+```jsx
+export default function Store() {
+  return <div>Store</div>;
+}
+```
+
+# React Router `createBrowserRouter`
+
+`main.jsx`
+
+```jsx
+import React from "react";
+import ReactDOM from "react-dom/client";
+import { RouterProvider } from "react-router-dom";
+import { router } from "./router";
+
+ReactDOM.createRoot(document.getElementById("root")).render(
+  <React.StrictMode>
+    <RouterProvider router={router} />
+  </React.StrictMode>
+);
+```
+
+`router.jsx`
+
+```jsx
+import { createBrowserRouter } from "react-router-dom";
+import Home from "./pages/Home";
+import Store from "./pages/Store";
+import About from "./pages/About";
+
+export const router = createBrowserRouter([
+  { path: "/", element: <Home /> },
+  { path: "/store", element: <Store /> },
+  { path: "/about", element: <About /> },
+]);
+```
+
+`App.jsx`
+
+```jsx
+import Navbar from "./Navbar";
+import About from "./pages/About";
+import Home from "./pages/Home";
+import Store from "./pages/Store";
+
+export default function App() {
+  let component;
+  switch (window.location.pathname) {
+    case "/":
+      component = <Home />;
+      break;
+    case "/about":
+      component = <About />;
+      break;
+    case "/store":
+      component = <Store />;
+      break;
+  }
+
+  return (
+    <>
+      <Navbar />
+      {component}
+    </>
+  );
+}
+```
+
+`Navbar.jsx`
+
+```jsx
+import { Link } from "react-router-dom";
+
+export default function Navbar() {
+  return (
+    <nav>
+      <ul>
+        <li>
+          <Link to="/">Home</Link>
+        </li>
+        <li>
+          <Link to="/about">About</Link>
+        </li>
+        <li>
+          <Link to="/store">Store</Link>
+        </li>
+      </ul>
+    </nav>
+  );
+}
+```
+
+`pages/Home.jsx`
+
+```jsx
+import Navbar from "../Navbar";
+
+export default function Home() {
+  return (
+    <>
+      <Navbar />
+      <h1>Home</h1>
+    </>
+  );
+}
+```
+
+`pages/Store.jsx`
+
+```jsx
+import Navbar from "../Navbar";
+
+export default function Store() {
+  return (
+    <>
+      <Navbar />
+      <h1>Store</h1>
+    </>
+  );
+}
+```
+
+`pages/About.jsx`
+
+```jsx
+import Navbar from "../Navbar";
+
+export default function About() {
+  return (
+    <>
+      <Navbar />
+      <h1>About</h1>
+    </>
   );
 }
 ```

@@ -1,6 +1,6 @@
 # JSX Code
 
-1. Can't be run in the browser - gets converted to a different syntax of just plain javascript code. for example...
+1. Can't be run in the browser - gets converted to a different syntax of just plain javascript code. For example...
 
 ```jsx
 import React from "react";
@@ -33,18 +33,18 @@ export default App;
 | **Topic**                               | **HTML**            | **React**                                                              |
 | --------------------------------------- | ------------------- | ---------------------------------------------------------------------- |
 | **Attributes**                          | dash                | camelCase                                                              |
-| _example_                               | _tab-index_         | _tabIndex_                                                             |
+| ..._example_                            | _tab-index_         | _tabIndex_                                                             |
 | **Custom Data Attributes ( data-... )** | data-...            | data-...                                                               |
-| _example_                               | _data-date_         | _data-date_                                                            |
+| ..._example_                            | _data-date_         | _data-date_                                                            |
 | **ARIA Attributes (aria-...)**          | aria-...            | aria-...                                                               |
-| _example_                               | _aria-label_        | _aria-label_                                                           |
+| ..._example_                            | _aria-label_        | _aria-label_                                                           |
 | **class attribute**                     | class               | className                                                              |
-| _example_                               | _class="project"_   | _className="project"_                                                  |
+| ..._example_                            | _class="project"_   | _className="project"_                                                  |
 | **for attribute**                       | for                 | htmlFor                                                                |
-| _example_                               | _for="id"_          | _htmlFor="id"_                                                         |
+| ..._example_                            | _for="id"_          | _htmlFor="id"_                                                         |
 | **style attribute**                     | style = "...:...;"  | style={{ : }}                                                          |
 |                                         | note:               | In React, the style is passed as object.                               |
-| _example_                               | style="color:blue;" | style={{ color: "blue" }}                                              |
+| ..._example_                            | style="color:blue;" | style={{ color: "blue" }}                                              |
 |                                         | note:               | Also, anything that would be in " " (that isn't a string), are in { }. |
 
 </br>
@@ -60,12 +60,14 @@ export default App;
 # Props
 
 1. Pass props without commas... `<NameFunc name="Lance" age={54} />`
-2. The component recieves as `props`... `export function NameFunc(props){...}`
+2. The component recieves as `props`. Ex... `export function NameFunc(props){...}`
 3. Props is actually an obect, so call it as `props.name` or `props.age`
 4. Can recieve props destructured... `export function NameFunc({name, age}){...}`
 5. Can set a default in the destructuring... `export function NameFunc({name, age = 54}){...}`
 6. If you pass a boolean prop without a value, it defaults to `true`
-7. If you pass a child, you access with `props.children` - `children` is a special term in React for this purpose
+7. If you pass a child, you access with `props.children`
+
+- `children` is a special term in React for this purpose
 
 Example, if you pass a child like this...
 
@@ -167,6 +169,10 @@ Good to use, but ONLY IF returning your result (not if doing functions, etc, in 
 - Therefore, if true &&, you get the second part. If false&&, you get nothing
 - You can also inline ternary in react rendering
 
+```jsx
+ { myVariable } != 1 && `${myVariable} is not equal to 1`
+```
+
 </br>
 
 # Rendering Lists
@@ -251,10 +257,6 @@ Good to use, but ONLY IF returning your result (not if doing functions, etc, in 
 6. You can change name of what to call a component by using "as". Ex... `import { ToDoList as List } from "./ToDoList"`
 7. Can define multiple components in same file
 
-```jsx
- { myVariable } != 1 && `${myVariable} is not equal to 1`
-```
-
 </br>
 
 # Diffence between React function and class
@@ -282,41 +284,42 @@ Good to use, but ONLY IF returning your result (not if doing functions, etc, in 
 | **Lifecyle** | **When runs...**                                                                                               |
 | ------------ | -------------------------------------------------------------------------------------------------------------- |
 | Mounting     | First time component is rendered to page                                                                       |
-| Update       | Every re-render after forst - only happend when state of a component changes, or its parent is re-rendered     |
+| Update       | Every re-render after first - only happens when state of a component changes, or its parent is re-rendered     |
 | Unmounting   | When component is removed from the page - note: after unmounting then mounting again, state is back to initial |
 
 </br>
 
 # useEffect Hook
 
-- react functions should be PURE functions (no side effects outdide of them)
-- useEffect allows you to do things that change side effects but keeping pure function
+- react functions should be PURE functions (no side effects outside of them)
+- `useEffect` allows you to do things that change side effects but keeping pure function
 
-### **useEffect(fx, [dependency array])**
+### **`useEffect(fx, [dependency array])`**
 
-- useEffect takes a function. 2nd parameter is an array of values.
+- `useEffect` takes a function. 2nd parameter is an array of values.
 
 1. Calls that function everytime a value from the array changes
 2. If you only want it to run on MOUNT, use empty array [] as dependency array
 
 - To run everytime there is a change to any state, leave off array
 
-3. Use useEffect any time want to change dom, like document title
-4. Use return () for cleanup (ex removing event listener) - it runs cleanup THEN the above part of function
+3. Use `useEffect` any time want to change DOM, like document title
+4. Use `return ()` for cleanup (ex removing event listener) - it runs cleanup THEN the above part of function
 5. When component is un-mounted, all cleanup is run
-6. REMEMBER, each time rendered, new object - remember ref vs value. 7. Everytime rerendered creates now object that you have made. May have same infor, but will have diff reference value
-7. useEffect compares with ===
-8. For API do in useEffect. fetch .then .then etc .catch .finally
+6. REMEMBER, each time rendered, new object (remember ref vs value).
+7. Everytime rerendered, React creates a new object that you have made. May have same info, but will have different reference value
+8. `useEffect` compares with ===
+9. For API do in `useEffect` `.fetch` `.then` `.then` etc `.catch` `.finally`
 
 </br>
 
 # Class component lifecyle
 
-1. componentDidMount
-2. componentWillUnmount
-3. componentDidUpdate
+1. `componentDidMount`
+2. `componentWillUnmount`
+3. `componentDidUpdate`
 
-- only runs on update (unlike useEffect which runs on mount & update)
+- only runs on update (unlike `useEffect` which runs on mount & update)
 - pass prevProps and prevState for comparison
 - No dedicated cleanup function - need to add, ex, remove event listener AND event listener so u run cleanup first
 - If you are going to use eventListener, etc that get passed a fxn, keep fxn the same and put up in constructor
@@ -336,47 +339,47 @@ Good to use, but ONLY IF returning your result (not if doing functions, etc, in 
 
 # APIs
 
-1. Create state for data (ex: const [users, setUsers] = useState()
-2. Create state for error (ex: const [error, setError] = useState()
-3. Create state for loading (ex: const [loading, setLoading] = useState(true)
+1. Create state for data (ex: `const [users, setUsers] = useState()`)
+2. Create state for error (ex: `const [error, setError] = useState()`)
+3. Create state for loading (ex: `const [loading, setLoading] = useState(true)`)
 
-**Do in useEffect**
+**Do in `useEffect`**
 
-4. setLoading(true) //Set loading to true each time api called
-5. setError(undefined) // set error to undefined each time api called
-6. setData(undefined) // set data to undefined each time api called
-7. Const controller = new AbortController() // create new AbortController object, used to cancel fetch // used for cleanup // it is saying that anytime fetch is called, it cancels previous fetch from before re-mounting and starts new fetch
-8. fetch(url, { signal: controller.signal} ) // fetch the api url // signal links controller to our fetch request
-9. .then(res => { // eval result for successful or error…
+4. `setLoading(true)` //Set loading to true each time api called
+5. `setError(undefined)` // set error to undefined each time api called
+6. `setData(undefined)` // set data to undefined each time API called
+7. `const controller = new AbortController()` // create new `AbortController` object, used to cancel `fetch` // used for cleanup // it is saying that anytime `fetch` is called, it cancels previous `fetch` from before re-mounting and starts new `fetch`
+8. `fetch(url, { signal: controller.signal} )` // fetch the API url // signal links controller to our `fetch` request
+9. `.then(res => {...})` // eval result for success or error.
 
-- if (res.status === 200) { return res.json() } // is successful, parse json
-- Else { return Promise.reject(res) } // then will get error below in catch
+- `if (res.status === 200) { return res.json() }` // is successful, parse json
+- `else { return Promise.reject(res) }` // then will get error below in `catch`
 
-9. .then(data => setUsers(data)) // set returned json to the chosen state… here it is users
-10. .catch(e => { // start catch
+9. `.then(data => setUsers(data))` // set returned json to the chosen state. here it is `users`
+10. `.catch(e => {...})` // start catch
 
-- If (e?.name === “AbortError”) return // if name of error is AbortReturn, do nothing bc we already took care of, manually aborted
-- setError(e) // sets error state to error (if not manually aborted bc that was ONLY TO CANCEL PREVIOUS FETCH
+- `if (e?.name === “AbortError”) return` // if name of error is `AbortReturn`, do nothing bc we already took care of, manually aborted
+- `setError(e)` // sets error state to error (if not manually aborted bc that was ONLY TO CANCEL PREVIOUS FETCH
 
-11. .finally(() => {setLoading(false)}) // indicated we are done loading (so loading jsx can change)
+11. `.finally(() => {setLoading(false)})` // indicated we are done loading (so loading jsx can change)
 
-12. Return () => { controller.abort() } // REMEMBER THAT IN USEEFFECT THE RETURN AT THE END IS CLEANUP… this is cancelling previous fetch before calling fetch
-13. ,[] // use empty dependency array for useEffect so only calls on mount
+12. `return () => { controller.abort() }` // REMEMBER THAT IN `useEffect` THE RETURN AT THE END IS CLEANUP... this is cancelling previous fetch before calling fetch
+13. `,[]` // use empty dependency array for useEffect so only calls on mount
 
 **THEN FOR UI**
 
-1. let jsx; // define variable
+1. `let jsx` // define variable
 
-- If (loading) { jsx = <h2>Loading…</h2> } // show “Loading…” on screen
-- Else if {error != null) {jsx = <h2>Error</h2> // show error if error
-- Else <h3>{ jsx = JSON.stringify(data) }</h3> // if done loading, set variable to stringified JSON
+- `if (loading) { jsx = <h2>Loading…</h2> }` // show “Loading…” on screen
+- `elseif {error != null) {jsx = <h2>Error</h2>}` // show error if error
+- `else <h3>{ jsx = JSON.stringify(data) }</h3>` // if done loading, set variable to stringified JSON
 
-2. Return ( { jsx } ) // render variable to screen
+2. `return ( { jsx } )` // render variable to screen
 
 **Note**
 
 - Can go to network in chrome dev to slow down speed to see loading
-- “The signal” is a javascript built in that is used to not call .then twice (bc fetch isnt being cancelled if called then recalled) – USED FOR CLEANUP
+- “The signal” is a javascript built in that is used to not call `.then` twice (bc `fetch` isnt being cancelled if called then recalled) – USED FOR CLEANUP
 
 ## API code block
 
@@ -466,7 +469,7 @@ export default App;
 
 # Fragments
 
-A way to return multiple elements without haing to wrap in a `<div>`
+A way to return multiple elements without having to wrap in a `<div>`
 
 1. They are just an empty element
 
@@ -838,7 +841,7 @@ export default function Item({ entry }) {
 }
 ```
 
-2.
+</br>
 
 # React Hooks
 
@@ -1045,7 +1048,7 @@ const filteredList = useMemo(() => {
 ```
 
 - In example, `console.log(filteredList.length)` makes the call to `filteredList`. This equation takes a relatively long time
-- `useMemo` makes it so that the function only run when there is a change from the last `query`.
+- `useMemo` makes it so that the function only runs when there is a change from the last `query`.
 - Full example...
 
 ```jsx
@@ -1184,7 +1187,7 @@ export default App;
 6. Generally we include it in a NEW file as `.js` (because doesn't have jsx). Then we import like other hooks... `import { useToggle } from "./useToggle"`
 7. Anytime we put a `function` inside of a custom hook, it's a good idea to wrap function in a `useCallback`
 
-- That way if function is used in a `useEffect` ets, the user doesn't have to worry about doing that themselves
+- That way if function is used in a `useEffect` etc, the user doesn't have to worry about doing that themselves
 
 8. Example... We use this toggle logic a lot...
 
@@ -1315,7 +1318,7 @@ export default App;
 
 # Local Storage in React
 
-[[freeCodeCamp - "How to Use `localStorage` with React Hooks to Set and Get Items"](https://www.freecodecamp.org/news/how-to-use-localstorage-with-react-hooks-to-set-and-get-items/)]
+From [[freeCodeCamp - "How to Use `localStorage` with React Hooks to Set and Get Items"](https://www.freecodecamp.org/news/how-to-use-localstorage-with-react-hooks-to-set-and-get-items/)]
 
 `localStorage` is a **web storage object** allowing JS sites & apps to keep key-value pairs in a web browser.
 
@@ -1628,3 +1631,1286 @@ return (
 7.  Can do schema-based form validation
 
 - Using `Zod` is best
+  </br>
+
+## `react-hook-form`
+
+```jsx
+npm install react-hook-form
+```
+
+1.  Behind the scenes, `react-hook-form` uses a Ref to not re-render page more than it needs to. This is by default. So by default it is **uncontrolled** input
+2.  `<ReactSecect>` is used to show how you can use an external UI library. It gives the nice drop-down select ability
+3.  `FormGroup.jsx` component encapsulates some of the error logic
+
+- We pass along `errorMessage` as prop to `FormGroup` component
+
+4. we spread `{...register()}` method in input to be able to use the properties of `register`
+
+- pass to `register` the name of input field. Ex... `{...register("email")}`
+- this name is how we now use this instance of `register`
+
+5.  In `<form>` element we use `handleSubmit` feature of `react-hook-form`
+
+- `onSubmit={handleSubmit(onSubmit)}`
+- Here we are wrapping `onSubmit` (or any function in our code that we want) in `handleSubmit()` (feature of `react-hook-form`). This is the called by `<form>`'s `onSubmit=` function
+
+6.  If we get to our `function onSubmit(data)` function, that means we have already passed all error tests (when using `react-hook-form`)
+
+7.  The name you use in `register()` becomes the unique key of the `data` property
+
+- Same with `errors` etc from `react-hook-library` - unique key is the name used in `register()`
+
+8.  `register()` has many properties you can use like `required`, `validate`, etc
+
+9.  To refer to `errors` (which we loaded from `useForm`), we are looking at the unique key (like "email") to get the `message`
+
+- We are passing this to or `FormGroup` component with `errorMessage` prop
+
+10. With `useForm` we can set default values.
+
+- Ex... `useForm({defaultValues: { email: "Hi"}})`
+- Can also change validation mode, criteria mode, and reValidation mode
+
+11. When doing many validations after {...register} you pass as key :value
+
+- Ex...
+
+```jsx
+validate: {
+              hasLowerCase: (value) => {
+                if (!value.match(/[a-z]/)) {
+                  return "Must include at least 1 lowercase letter";
+                }
+              },
+              hasUpperCase: (value) => {
+                if (!value.match(/[A-Z]/)) {
+                  return "Must include at least 1 uppercase letter";
+                }
+              }
+```
+
+12. To use `<ReactSelect>`, need to change to **controlled** input. Need to add `control` from `useForm`.
+
+- a. Use `useController` hook to allow **controlled** input
+- b. Add `control` to `useForm` returned properties
+- c. For `useController`, define `field` (will be what is used in `<input>` instead of `register`)
+- d. For `useController`, define `name` (same as `id` from `<input>`)
+- e. Also, define rules in `useController`
+
+13. Can use `watch` property returned from `useForm` to get the most up to date live value of something
+
+- Ex...
+
+```jsx
+const {
+  register,
+  handleSubmit,
+  formState: { errors },
+  watch,
+} = useForm();
+
+const liveEmail = watch("email");
+```
+
+- not used in example below, but can use if wanted
+
+`App.jsx`
+
+```jsx
+import { FormGroup } from "./FormGroup";
+import ReactSelect from "react-select";
+import "./styles.css";
+import { useController, useForm } from "react-hook-form";
+
+const COUNTRY_OPTIONS = [
+  { label: "United States", value: "US" },
+  { label: "India", value: "IN" },
+  { label: "Mexico", value: "MX" },
+];
+
+function App() {
+  // useForm returning register, handleSubmit, errors
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    // control is added to be able to use useController for the drop down
+    control,
+  } = useForm();
+
+  // useController hook allows CONTROLLED input for the <ReactSelect> part. Define returned field key with a value (here "countryField" - this is how you call it)
+  // In useController, define name (same as id from <input>), and rules
+  const { field: countryField } = useController({
+    name: "country",
+    control,
+    rules: { required: { value: true, message: "Required" } },
+  });
+
+  //  If we get to our `function onSubmit(data)` function, that means we have already passed all error tests
+  // The name you use in `register()` becomes the unique key of the `data` property
+  function onSubmit(data) {
+    console.log(data);
+    alert("Success");
+  }
+
+  return (
+    {/*Here we are wrapping `onSubmit` (or any function in our code that we want) in `handleSubmit()` (feature of `react-hook-form`).  This is the called by `<form>`'s `onSubmit=` function*/}
+    <form onSubmit={handleSubmit(onSubmit)} className="form">
+      {/*Below we we are looking at the unique key (like "email") to get the `message`
+      - We are passing this to or `FormGroup` component with `errorMessage` prop - This is saying :if there are errors (part of useForm), then if there is email error, get message and pass as errorMessage prop*/}
+      <FormGroup errorMessage={errors?.email?.message}>
+        <label className="label" htmlFor="email">
+          Email
+        </label>
+        <input
+          className="input"
+          type="email"
+          id="email"
+          {/* we spread the properties of register method to be able to use options of the method*/}
+          {/* pass to `register` the name of input field. Ex... `{...register("email")}` - just by passing name, register is doing all the behind the scenes things on its own*/}
+          {...register("email", {
+            {/* if you want required to have a message, need to pass an object as below*/}
+            required: { value: true, message: "Required" },
+            {/*validate takes the value of input and performs the logic you want*/}
+            validate: (value) => {
+              if (!value.endsWith("@webdevsimplified.com")) {
+                return "Must end with @webdevsimplified.com";
+              }
+            },
+          })}
+        />
+      </FormGroup>
+      <FormGroup errorMessage={errors?.password?.message}>
+        <label className="label" htmlFor="password">
+          Password
+        </label>
+        <input
+          className="input"
+          type="password"
+          id="password"
+          {...register("password", {
+            required: { value: true, message: "Required" },
+            minLength: { value: 10, message: "Must be at least 10 characters" },
+            {/*with many validations like below, pass a key: value */}
+            validate: {
+              hasLowerCase: (value) => {
+                if (!value.match(/[a-z]/)) {
+                  return "Must include at least 1 lowercase letter";
+                }
+              },
+              hasUpperCase: (value) => {
+                if (!value.match(/[A-Z]/)) {
+                  return "Must include at least 1 uppercase letter";
+                }
+              },
+              hasNumber: (value) => {
+                if (!value.match(/[0-9]/)) {
+                  return "Must include at least 1 number";
+                }
+              },
+            },
+          })}
+        />
+      </FormGroup>
+      <FormGroup errorMessage={errors?.country?.message}>
+        <label className="label" htmlFor="country">
+          Country
+        </label>
+        {/*ReactSelect needs controlled input to work, so we use useCntroller hook above.*/}
+        <ReactSelect
+          isClearable
+          classNamePrefix="react-select"
+          id="country"
+          options={COUNTRY_OPTIONS}
+          {/*for controlled input, instead of using register, we use the "field" value returned by useController*/}
+          {...countryField}
+        />
+      </FormGroup>
+      <button className="btn" type="submit">
+        Submit
+      </button>
+    </form>
+  );
+}
+
+export default App;
+```
+
+`FormGroup.jsx`
+
+```jsx
+export function FormGroup({ errorMessage = "", children }) {
+  return (
+    <div className={`form-group ${errorMessage.length > 0 ? "error" : ""}`}>
+      {children}
+      {errorMessage.length > 0 && <div className="msg">{errorMessage}</div>}
+    </div>
+  );
+}
+```
+
+</br>
+
+## Managing state without `useState`
+
+## `useReducer` Hook
+
+1.  Another way to manage state. Use for more complex pieces of state
+2.  Use if using `useState` would result in different `useState`'s to be linked to each other
+3.  Use `useReducer` when there are distinct actions to use on `useState`, or where results are distinct states. (For example, in basic example below, the distinct actions are FETCH_START FETCH_SUCCESS, FETCH_ERROR)
+
+- It is set up in a way where you can do distinct actions
+
+4. Format is...
+
+```jsx
+const [state, dispatch] = useReducer(reducer, initialState, initialStateFxn);
+```
+
+5. `useReducer` takes `reducer` function, initial value (can be object as in example below), and initialStateFxn, if there is one. initialStateFxn takes as it's parameter whatever initialState is
+
+- Note... so `useState` takes initial state that can be value or function. `useReducer` takes initialValue as second paramenter, and initialStateFxn as third
+
+6. `useReducer` returns `state` (like `useState` does), and `dispatch` method
+
+7. Usually define `reducer` function outside of component
+
+- `reducer` method takes `state` and `action`. Whatever you send in `dispatch()` when it is called is recieved by `reducer` as `action` (it gets `state` automatically)
+
+8.  When using `useReducer`, it is good to break out actions into non-string based (to avoid typo mistakes). If not usig typescript, best way is with a object (see ACTIONS below)
+
+```jsx
+function reducer(state, action) {
+  ...
+}
+```
+
+8.  `reducer` function is often a switch statement
+
+- `case`s are based off of `action` `type`
+- `action` is often sent with `key : value` pairs for `type` & `payload`
+
+Example of basic `useReducer` hook
+
+```jsx
+import { useReducer } from "react";
+
+const ACTIONS = {
+  INCREMENT: "INCREMENT",
+  DECREMENT: "DECREMENT",
+  CHANGE_COUNT: "CHANGE_COUNT",
+  RESET: "RESET",
+};
+
+function reducer(count, action) {
+  switch (action.type) {
+    case ACTIONS.DECREMENT:
+      return count - 1;
+    case ACTIONS.INCREMENT:
+      return count + 1;
+    case ACTIONS.CHANGE_COUNT:
+      return count + action.payload.value;
+    case ACTIONS.RESET:
+      return 0;
+    default:
+      return count;
+  }
+}
+
+export default function Counter({ initialCount = 0 }) {
+  const [count, dispatch] = useReducer(reducer, initialCount);
+
+  return (
+    <>
+      <button onClick={() => dispatch({ type: ACTIONS.DECREMENT })}>-</button>
+      {count}
+      <button onClick={() => dispatch({ type: ACTIONS.INCREMENT })}>+</button>
+      <button onClick={() => dispatch({ type: ACTIONS.RESET })}>Reset</button>
+      <button
+        onClick={() =>
+          dispatch({ type: ACTIONS.CHANGE_COUNT, payload: { value: 5 } })
+        }
+      >
+        +5
+      </button>
+    </>
+  );
+}
+```
+
+Example of `useFetch` with `useReducer` (instead of `useState`)
+
+- perfect example of how you'd normally use `useReducer`
+
+`useFetch.jsx`
+
+```jsx
+import { useEffect, useReducer, useState } from "react";
+
+const ACTIONS = {
+  FETCH_START: "FETCH_START",
+  FETCH_SUCCESS: "FETCH_SUCCESS",
+  FETCH_ERROR: "FETCH_ERROR",
+};
+
+function reducer(state, { type, payload }) {
+  switch (type) {
+    case ACTIONS.FETCH_START:
+      return {
+        ...state,
+        isError: false,
+        isLoading: true,
+      };
+    case ACTIONS.FETCH_SUCCESS:
+      return {
+        ...state,
+        data: payload.data,
+        isLoading: false,
+        isError: false,
+      };
+    case ACTIONS.FETCH_ERROR:
+      return {
+        ...state,
+        isError: true,
+        isLoading: false,
+      };
+    default:
+      return state;
+  }
+}
+
+export function useFetch(myUrl, options = {}) {
+  const [state, dispatch] = useReducer(reducer, {
+    isError: false,
+    isLoading: true,
+  });
+  //  const [data, setData] = useState();
+  //  const [isError, setIsError] = useState(undefined);
+  //  const [isLoading, setIsLoading] = useState(undefined);
+
+  useEffect(() => {
+    dispatch({ type: ACTIONS.FETCH_START });
+    //    setData(undefined);
+    //    setIsError(undefined);
+    //    setIsLoading(true);
+
+    const controller = new AbortController();
+
+    fetch(myUrl, options, { signal: controller.signal })
+      .then((res) => {
+        if (res.status === 200 || res.status === 201) {
+          return res.json();
+        } else {
+          console.log("res: ", res);
+          return Promise.reject(res);
+        }
+      })
+      .then((data) => {
+        dispatch({ type: ACTIONS.FETCH_SUCCESS, payload: { data } });
+        // setData(data);
+      })
+      .catch((e) => {
+        if (e?.name === "AbortError") return;
+        dispatch({ type: ACTIONS.FETCH_ERROR });
+        // setIsError(e);
+      });
+    //  .finally(() => {
+    //  if (controller.signal.aborted) return;
+    //  setIsLoading(false);
+    //  });
+
+    return () => {
+      controller.abort();
+    };
+  }, [myUrl]);
+
+  return state;
+}
+```
+
+## `useContext` Hook
+
+1.  Makes sharing state between multiple components much easier
+2.  `useContext` allows you to pass props to any components down the line without passing props though each intermediate component
+3.  In the following code, `useState` is used for `isDarkMode`, And `toggleTheme` is a function in `App`
+
+- Since the logic for controlling dark mode is in the root of the component tree, you would need to "prop-drill" through components to use this in nested components, etc
+
+```jsx
+import { useEffect, useState } from "react";
+
+function App() {
+  const [isDarkMode, setIsDarkMode] = useState(false);
+
+  function toggleTheme() {
+    setIsDarkMode((d) => !d);
+  }
+
+  useEffect(() => {
+    document.body.style.background = isDarkMode ? "#333" : "white";
+    document.body.style.color = isDarkMode ? "white" : "#333";
+  }, [isDarkMode]);
+
+  return (
+    <>
+      <button
+        style={{
+          background: isDarkMode ? "white" : "#333",
+          color: isDarkMode ? "#333" : "white",
+          border: "none",
+          padding: ".5em",
+          borderRadius: ".25em",
+          cursor: "pointer",
+        }}
+        onClick={toggleTheme}
+      >
+        Toggle Theme
+      </button>
+      <p>Lorem ipsum</p>
+    </>
+  );
+}
+
+export default App;
+```
+
+- Say the `<button>` is in a `Grandchild.jsx` component, which is called from `Child.jsx` component. We would need to prop-drill `isDarkMode` and `toggleTheme` as props though `Child.jsx` and `Grandchild.jsx`
+- If `Child.jsx` does not have a `<button>` for dark mode, the component doesn't even need the props, but you'd have to pass props though anyway
+
+3.  To use `useContext`...
+
+    a. import `createContext`
+
+    ```jsx
+    import { createContext } from "react";
+    ```
+
+    b. Define `createContext` OUTSIDE of component. `useContext` makes state global so needs to be outside of component
+
+    c. Capitalize variable name for `createContext` instance (because it will be used as a component)
+
+    - We `export` because will be imported into components like importing a component
+
+    ```jsx
+    export const ThemeContext = createContext();
+    ```
+
+    d. Wrap all of the code (tree of coponents) that will use anything that we are going to put in the `useContext`
+
+    - Wrap it with the defined name of our `createContext` (ex... `ThemeContext`)
+    - Add `.Provider` (would be `.Consumer` if being consumed in Class Component)
+
+    e. Add a prop to this of `value=` and pass the variables that will be used. We are passing as object below
+
+    - I removed `<button>` logic which will be in Child or nested for `useContext`
+    - I added <Child /> to call. So `<Child>` is wrapped in tree of coponents (so `App` calls `Child`, and `Child`calls `Grandchild`. Now `Grandchild` can use variables by using `useContext` )
+
+    ```jsx
+    return (
+      <ThemeContext.Provider value={{ isDarkMode, toggleTheme }}>
+        <Child />
+        <p>Lorem ipsum</p>
+      </ThemeContext.Provider>
+    );
+    ```
+
+    f. Then to use...
+
+    - `import` from where it was defined
+    - call `useContext` by name at top of component if calling from a class component, need `.Consumer` instead
+    - destructure variables out to use them
+
+    ```jsx
+    import { ThemeContext } from "./App";
+
+    export function Grandchild() {
+      const [isDarkMode, toggleTheme] = useContext(ThemeContext);
+      {
+        /* ........ */
+      }
+    }
+    ```
+
+    - Now anywhere we want to use our context we can use it, as long as a child of our context Provider, and parent component is wrapped in context Provider
+
+    - Note... `App` is still using `useState` to manage the variables. We are ALSO adding `useContext` to pass variables somewhere down component tree without prop-drilling
+
+4.  Caveats - Don't use for all of the state. Use if...
+
+    a. You have state that will be global to your entire application
+
+    b. Or state global to a subset of application
+
+    - Example - If you have a section of state just dealing with comments, you might want to wrap that in a context to use anywhere that deals with comments
+
+5.  Full example...
+
+`App.jsx`
+
+```jsx
+import { useEffect, useState, createContext } from "react";
+import Child from "./Child";
+
+export const ThemeContext = createContext();
+
+function App() {
+  const [isDarkMode, setIsDarkMode] = useState(false);
+
+  function toggleTheme() {
+    setIsDarkMode((d) => !d);
+  }
+
+  useEffect(() => {
+    document.body.style.background = isDarkMode ? "#333" : "white";
+    document.body.style.color = isDarkMode ? "white" : "#333";
+  }, [isDarkMode]);
+
+  return (
+    <ThemeContext.Provider value={{ isDarkMode, toggleTheme }}>
+      <Child />
+      <p>Lorem ipsum</p>
+    </ThemeContext.Provider>
+  );
+}
+
+export default App;
+```
+
+`Child.jsx`
+
+```jsx
+import Grandchild from "./Grandchild";
+
+export default function Child() {
+  return (
+    <>
+      <Grandchild />
+    </>
+  );
+}
+```
+
+`Grandchild.jsx`
+
+```jsx
+import { useContext } from "react";
+import { ThemeContext } from "./App";
+
+export default function Grandchild() {
+  const { isDarkMode, toggleTheme } = useContext(ThemeContext);
+
+  return (
+    <>
+      <button
+        style={{
+          background: isDarkMode ? "white" : "#333",
+          color: isDarkMode ? "#333" : "white",
+          border: "none",
+          padding: ".5em",
+          borderRadius: ".25em",
+          cursor: "pointer",
+        }}
+        onClick={toggleTheme}
+      >
+        Toggle Theme
+      </button>
+    </>
+  );
+}
+```
+
+## Future of Redux
+
+With `useContext` and `useReducer` don't see a need for Redux to manage state
+
+- Redux did two things... gave `reducer` like capabilities, and allowed ability to easily share state with different levels of nesting
+
+## Local is Best
+
+Problem: People share too much state globally, and don't put state locally enough
+
+1.  Put state as locally as possible. Store state in component as close as possible to where it is needed
+    - Example, in a `Counter` component, state can be kept in that component. BUT if another component, such as `CounterReset`, needs to access the state, need to put state up a level in component.
+    - This way the `Counter` and `CounterReset` components can both access state.
+2.  Becomes difficult with larger and larger apps. You may not even realize the state can be more local than it is
+3.  Keep asking, "Can I make this more local than it is?"
+4.  Applies to making state too global. `useContext` makes state global. `useContext` should be used where it is prohibitive to pass down props, or needs to be used all over app
+5.  In examples we've often been putting state in `App`, but irl put it as locally as possible
+
+## Never Store Derived State
+
+1.  Never store something in state that is derived from other things in state
+2.  Never store something in state that is taking part of other things in state
+
+Example of WHAT TO NOT DO...
+
+```jsx
+// WRONG WAY TO DEAL WITH DERIVED STATE
+
+import { useState } from "react";
+
+export default function App() {
+  const [items, setItems] = useState([1, 2, 3, 4, 5]);
+  const [filteredItems, setFilteredItems] = useState(items);
+
+  function updateFilteredItems(e) {
+    if (e.target.value === "") {
+      setFilteredItems(items);
+    } else {
+      setFilteredItems(items.filter((item) => item < e.target.valueAsNumber));
+    }
+  }
+
+  return (
+    <>
+      <label htmlFor="lessThan">Show Less Than</label>
+      <input id="lessThan" type="number" onChange={updateFilteredItems} />
+      <br />
+      <br />
+      <div>{filteredItems.join(", ")}</div>
+      <br />
+      {/*2.5 ADD ISN'T WORKING BC filteredItems USES DERIVED STATE*/}
+      <button onClick={() => setItems((i) => [...i, 2.5])}>
+        Add 2.5 to list
+      </button>
+    </>
+  );
+}
+```
+
+- Code doesn't work well because `filteredItems` is a subset of `items` and both are stored in state.
+- So the way it is written, if you update `items` you have to also update `filteredItems`. So the adding 2.5 to list isn't working.
+
+INSTEAD, DO NOT USE DERIVED STATES. (Below we don't use `filteredItems` in state)
+
+```jsx
+import { useState, useMemo } from "react";
+
+export default function App() {
+  const [items, setItems] = useState([1, 2, 3, 4, 5]);
+  const [inputValue, setInputValue] = useState("");
+
+  // filteredItems is now just a variable, not saved in state
+  // is calculated each time re-rendered(can useMemo if want)
+  const filteredItems = useMemo(() => {
+    return inputValue === ""
+      ? items
+      : items.filter((item) => item < inputValue);
+  }, [items, inputValue]);
+
+  return (
+    <>
+      <label htmlFor="lessThan">Show Less Than</label>
+      {/* we setInputValue below (instead of calling derived state funtion */}
+      <input
+        id="lessThan"
+        type="number"
+        onChange={(e) => setInputValue(e.target.valueAsNumber)}
+        value={inputValue}
+      />
+      <br />
+      <br />
+      <div>{filteredItems.join(", ")}</div>
+      <br />
+      <button onClick={() => setItems((i) => [...i, 2.5])}>
+        Add 2.5 to list
+      </button>
+    </>
+  );
+}
+```
+
+- This is changed so we don't use `filteredItems` as a derived state. Instead `items` and `inputValue` are saved as state. `filterdItems` is just a variable calculated when re-renders
+- Works now bc when click "Add 2.5", we add 2.5 to end of list (`setItems`), then rerun component and `filteredItems` function is re-run
+- We optimized by adding `useMemo`
+
+3.  TEST... If you update one piece of state and it requires you to update another piece of state that is depending on that, then you are storing derived state
+4.  Instead of storing derived state, just calculate on each re-render
+
+- If code is running slow bc of this new calculation on every re-render, can optimize with `useMemo`
+
+5.  Another piece of code where this is a problem is if you have a state for `user` and state for `selectedUser`
+
+```jsx
+const [users, setUsers] = useState([
+  { id: 1, name: "Kyle" },
+  { id: 2, name: "John" }
+])
+
+const [selectedUser, setSelectedUser]
+```
+
+- This can give unwanted responses if `user` state changes bc of value referneces
+- INSTEAD reference by id
+
+```jsx
+const [users, setUsers] = useState([
+  { id: 1, name: "Kyle" },
+  { id: 2, name: "John" }
+])
+
+const [selectedUserId, setSelectedUserId]
+
+const selectedUser = users.find(user => user.id === selectedUserId )
+
+```
+
+- Here we are storing `selectedUserId`, which is then used to derive our value of `selectedUser` (instead of making `selectedUser` a state)
+
+## Environment Variables
+
+How to deal with state that is dependent on which environment you are working in - environment variable
+
+1.  Sometimes you want different environment variables depending on which environment you are in (local, development, production)
+
+- Example, in development you want to call your development API; in production, you want to call your production API.
+
+2.  This works diffent in VITE vs CREATE_REACT_APP
+
+3.  VITE
+
+    a. In VITE, any environment variable you start with `VITE_` will be exposed. Everything else is not exposed - Say you have environment variable in VITE in folder `.env`
+
+    `.env`
+
+    ```jsx
+    VITE_URL = www.dev.com;
+    PASSWORD = password123;
+    ```
+
+    - `PASSWORD` will not be exposed bc doesn't start with `VITE_`
+      - You call this in VITE with `{import.meta.env.VITE_URL}`
+      - If you called that with PASSWORD, it would NOT expose it
+
+    `App.jsx`
+
+    ```jsx
+    export default function App() {
+      return <div>{import.meta.env.VITE_URL}</div>;
+    }
+    ```
+
+    b. Be careful about what gets checked into github repository
+
+    - In `gitignore` we don't check in files ending inl `.local`. So can use `.local` to keep environmental variables from github repo
+    - We can have 3 `.env` files, and VITE will use them as specified
+
+    ```jsx
+    .env.local
+    .env.development.local
+    .env.production.local
+    ```
+
+    - VITE will now use `.env.development.local` in development environment, use `.env.production.local` in production environment, and `.env.local` any other time
+    - Ex... if `npm run build` you are in production environment. Run `npm run prieview` and VITE will be using `.env.production.local`
+
+4.  CREATE_REACT_APP
+
+- This is similar but differences are...
+
+  a. All the naming works the same
+
+  b. `gitignore` still ignores `.local`
+
+  c. To have CREATE*REACT_APP use a variable (exposing it) start with `REACT_APP*`
+
+  `.env.development.local`
+
+  ```jsx
+  REACT_APP_URL = www.dev.com;
+  PASSWORD = password123;
+  ```
+
+  d. Call the variable with {process.env.REACT_APP_URL}
+
+  - Note that we refered to it as `.env.REACT_APP_URL`, and React / CREATE_REACT_APP know to use `.env.development.local` in the development mode
+
+  e. In CREATE_REACT_APP you HAVE TO RESTART APPLICATION when you change environment variables for it to work
+
+## Routing without a Library
+
+Generally use a `switch` statement in `App.jsx` to find URL we are at
+
+1.  Routing allows you to navigate between multiple pages. ( Most famous library is React Router Library )
+2.  Say we have the following `pages` folder
+
+`Pages` folder
+
+```jsx
+Home.jsx;
+Store.jsx;
+About.jsx;
+```
+
+- We want to render appropriate page based on what URL we are on
+
+  - `/`
+  - `/store`
+  - `/about`
+
+- Without a library, we want to setect page based on URL
+- Get URL with
+
+  - `window.location.href` (for full URL)
+
+  - `window.location.pathname` (for just `/...`)
+
+3.  In React, it doesn't matter the URL, it ALWAYS reders `index.html`, `main.jsx`, and `App.jsx`
+
+4.  Generally use a `switch` statement in `App.jsx` for pathname of URL we are on
+
+`App.jsx`
+
+```jsx
+import About from "./pages/About";
+import Home from "./pages/Home";
+import Store from "./pages/Store";
+
+export default function App() {
+  let component;
+  switch (window.location.pathname) {
+    case "/":
+      component = <Home />;
+      break;
+    case "/about":
+      component = <About />;
+      break;
+    case "/store":
+      component = <Store />;
+      break;
+  }
+
+  return (
+    <>
+      <nav>
+        <ul>
+          <li>
+            <a href="/">Home</a>
+          </li>
+          <li>
+            <a href="/about">About</a>
+          </li>
+          <li>
+            <a href="/store">Store</a>
+          </li>
+        </ul>
+      </nav>
+      {component}
+    </>
+  );
+}
+```
+
+`Home.jsx` (`About` & `Store` similar)
+
+```jsx
+export default function Home() {
+  return <div>Home</div>;
+}
+```
+
+- Note that Nav Bar always shows up bc `App` is always rendered
+
+5.  Quite SLOW bc it re-runs everything (downloading all of the html, all of the js - really a full page navigation)
+
+- BUT in React all info is run on the client, so don't need a full refresh. `React Router` will help with this bc it won't re-run the whole page
+
+  - `React Router` never re-calls the whole page - it does the state managment and page navigation inside of application
+
+</br>
+
+## React Router
+
+1.  React Router has methods to make routing much easier and more powerful
+
+```jsx
+npm import react-router-dom
+```
+
+2.  Will work similar to our `switch` statement (in last section) but much more powerful
+
+- Usually create `router` in it's own file `router.jsx`
+- Use `createBrowserRouter` (best for 99% of cases)
+
+  - see `createHashRouter` and `createMemoryRouter below`
+
+- `import { createBrowserRouter } from "react-router-dom"`
+
+- create our `router` instance
+
+  ```jsx
+  export const router = createBrowserRouter([{}]);
+  ```
+
+- This takes an array of routes
+
+- Array has different objects to set. Two main ones are `path` and `element`
+
+  - `path` is the path after url
+
+  - `element` is where to go with path
+
+```jsx
+export const router = createBrowserRouter([
+  { path: "/", element: <Home /> },
+  { path: "/store", element: <Store /> },
+  { path: "/about", element: <About /> },
+]);
+```
+
+- Now we impliment `router`. Usually done in `main.jsx` because we want to wrap ENTIRE APPLICATION in this (could do in `App.jsx`)
+
+- We just create a `RouterProvider` (imported from `react-router-dom`)
+
+- Pass it `router` that we import from `router.jsx`. Basically we are passing the object we made in `router` to the `RouterProvider` in `main.jsx`
+
+`main.jsx`
+
+```jsx
+import React from "react";
+import ReactDOM from "react-dom/client";
+import { RouterProvider } from "react-router-dom";
+import { router } from "./router";
+
+ReactDOM.createRoot(document.getElementById("root")).render(
+  <React.StrictMode>
+    <RouterProvider router={router} />
+  </React.StrictMode>
+);
+```
+
+- This renders our react Component depending on our path
+
+- Now we need to call our `<Navbar>` component
+
+```jsx
+export default function Navbar() {
+  return (
+    <nav>
+      <ul>
+        <li>
+          <a href="/">Home</a>
+        </li>
+        <li>
+          <a href="/about">About</a>
+        </li>
+        <li>
+          <a href="/store">Store</a>
+        </li>
+      </ul>
+    </nav>
+  );
+}
+```
+
+- BUT there are 2 rules about how to use our `<Navbar>`.
+
+  - Instead of anchor tags (`<a></a>`) we use a custom component called `<Link>` (a `react-router` specific component). This will keep page from doing full page refresh. With `<Link>` we use `to` instead of `href`
+
+  ```jsx
+  <li>
+    <Link to="/">Home</Link>
+  </li>
+  ```
+
+  - we can't put `<Navbar>` above `<RouterProvider>` because `router` (via `<RouterProvider>` has to wrap everything). If we try it we get error because `<Link>` is part of `react-router`. So anything that calls `<Navbar>` (which includes `<Link>`) needs to be wrapped in `<RouterProvider>`. Therefore we can put `<Navbar>` at top of each component
+
+  ```jsx
+  export default function Home() {
+    return (
+      <>
+        <Navbar />
+        <h1>Home</h1>
+      </>
+    );
+  }
+  ```
+
+  - NOW, we can see by slowing network that it is updating URL, but not refreshing page. It is only swapping out content. So much faster
+
+4.  If you don't want to use routing objects, can do old way by making routing components. To do this, use `createRoutesFromElements`
+
+```jsx
+import {
+  Route,
+  createBrowserRouter,
+  createRoutesFromElements,
+} from "react-router-dom";
+import Home from "./pages/Home";
+import Store from "./pages/Store";
+import About from "./pages/About";
+
+export const router = createBrowserRouter(
+  createRoutesFromElements([
+    <>
+      <Route path="/" element={<Home />} />
+      <Route path="/store" element={<Store />} />
+      <Route path="/about" element={<About />} />
+    </>,
+  ])
+);
+```
+
+- Here we import `Route` and `createRoutesFromElements`
+- Instead of OBJECT of `path` & `element`, we are making `Route` components, and using COMPONENTS with `path` & `element` inside
+- BUT using objects is cleaner and more current
+
+5.  The `createBrowserRouter` is the default (& best 99% of the time), but there are other `create...Router` you can use in different situations
+
+a. `createHashRouter`
+
+    - will do `.../#/`, `.../#/store`, etc
+    - URL comes after `#` symbol
+    - only use if you can't change URL of your site
+
+```jsx
+export const router = createHashRouter([
+  { path: "/", element: <Home /> },
+  { path: "/store", element: <Store /> },
+  { path: "/about", element: <About /> },
+]);
+```
+
+b. `createMemoryRouter`
+
+- Stores everything related to routing in MEMORY, not in url bar
+- Only good for testing, like if don't have access to browser
+- will NOT see URL bar change bc all in memory
+
+```jsx
+export const router = createMemoryRouter([
+  { path: "/", element: <Home /> },
+  { path: "/store", element: <Store /> },
+  { path: "/about", element: <About /> },
+]);
+```
+
+</br>
+
+## React Router - Nesting Routes
+
+- Expands upon what you can do with React Router.
+- Before this, note how we had to put `<Navbar>` inside of each component (`Home`, `Store`, `About`)
+- To solve this we can **nest routes**
+
+1.  First we can wrap all of our components in another component. Here, we use `element` to wrap our components in component called `<NavLayout>`
+
+2.  We wrap our objects of `{ path: ..., element: ...}` in an array and declare this as `children` of your new element
+
+- My Note: These objects in `router` can have pairs in the objects like `{ path: ... , element: ...}` or `{ element: ... , children: [...] }`
+
+3.  We create component `<NavLayout>` (here we just do as function below). `<NavLayout>` renders out `<Navbar>` AND the current component
+
+4.  We use `<Outlet />` to render the correct child component. `<Outlet />` is a `React Router` component that allows us to render the child component (`<Home />`, `<Store />`, etc) of our element (`<NavLayout>`)
+
+```jsx
+export const router = createBrowserRouter([
+  {
+    element: <NavLayout />,
+    children: [
+      { path: "/", element: <Home /> },
+      { path: "/store", element: <Store /> },
+      { path: "/about", element: <About /> },
+    ],
+  },
+]);
+
+function NavLayout() {
+  return (
+    <>
+      <Navbar />
+      <Outlet />
+    </>
+  );
+}
+```
+
+- `React Router` always renders from the top down
+
+  - It defaults to `element: <NavLayout />`
+  - Starts to render `<NavLayout>` component: So it renders `<Navbar />`
+  - Then sees there is an `<Outlet />` so it looks at children of `element: <NavLayout />` to see which one matches (the URL)
+  - Ex: if it sees "/store" matches the url, then it renders `<Store />`
+
+5.  We can nest as deep as we want
+
+- Say we add another component `<Team />`
+- And want to be able to go to specific team members. We make a component `<TeamMember />`
+- We pass `<TeamMember />` a prop of the name based on url (`<TeamMember name="joe" />`)
+- Do same with other team members
+- Add new components to our `<Navbar />` `<li>` list
+
+`TeamMember.jsx`
+
+```jsx
+export default function TeamMember({ name }) {
+  return <h1>TeamMember - {name}</h1>;
+}
+```
+
+`router.jsx`
+
+```jsx
+export const router = createBrowserRouter([
+  {
+    element: <NavLayout />,
+    children: [
+      { path: "/", element: <Home /> },
+      { path: "/store", element: <Store /> },
+      { path: "/about", element: <About /> },
+      { path: "/team", element: <Team /> },
+      { path: "/team/joe", element: <TeamMember name="joe" /> },
+      { path: "/team/sally", element: <TeamMember name="sally" /> },
+    ],
+  },
+]);
+
+function NavLayout() {
+  return (
+    <>
+      <Navbar />
+      <Outlet />
+    </>
+  );
+}
+```
+
+6.  This works well but there is repeated code. We can make make the "/team", "/team/joe", etc childrem of a `{ path: "/team", ... }` by wrapping them in a children array
+
+- And we can remove "/team" from the children beacuse "/team" is parent element (Note: children are "joe", NOT "/joe")
+
+7.  When you want to directly match the path of the parent, use `index: true` (instead of `path: "/team"`)
+
+```jsx
+export const router = createBrowserRouter([
+  {
+    element: <NavLayout />,
+    children: [
+      { path: "/", element: <Home /> },
+      { path: "/store", element: <Store /> },
+      { path: "/about", element: <About /> },
+      {
+        path: "/team",
+        children: [
+          { index: true, element: <Team /> },
+          { path: "joe", element: <TeamMember name="joe" /> },
+          { path: "sally", element: <TeamMember name="sally" /> },
+        ],
+      },
+    ],
+  },
+]);
+```
+
+8.  Now say in `<Navbar />` we only want to show `<Team />` (not team members until we are in `<Team />`)
+
+- Make new component `<TeamNav />`
+- Break `<Navbar />` up into `<Navbar />` and `<TeamNav />`
+- Add `element: <TeamNavLayout />` to object with `path: "/team"`
+- Add `<TeamNavLayout />` function. Here it is just below in our `router.jsx`. This directs to `<TeamNav />` when we are in `"/team..."`
+
+`Navbar.jsx`
+
+```jsx
+import { Link } from "react-router-dom";
+
+export default function Navbar() {
+  return (
+    <nav>
+      <ul>
+        <li>
+          <Link to="/">Home</Link>
+        </li>
+        <li>
+          <Link to="/about">About</Link>
+        </li>
+        <li>
+          <Link to="/store">Store</Link>
+        </li>
+        <li>
+          <Link to="/team">Team</Link>
+        </li>
+      </ul>
+    </nav>
+  );
+}
+```
+
+`TeamNav.jsx`
+
+```jsx
+import { Link } from "react-router-dom";
+
+export default function TeamNav() {
+  return (
+    <nav>
+      <ul>
+        <li>
+          <Link to="/team/joe">Team - Joe</Link>
+        </li>
+        <li>
+          <Link to="/team/sally">Team - Sally</Link>
+        </li>
+      </ul>
+    </nav>
+  );
+}
+```
+
+`router.jsx`
+
+```jsx
+export const router = createBrowserRouter([
+  {
+    element: <NavLayout />,
+    children: [
+      { path: "/", element: <Home /> },
+      { path: "/store", element: <Store /> },
+      { path: "/about", element: <About /> },
+      {
+        element: <TeamNavLayout />,
+        path: "/team",
+        children: [
+          { index: true, element: <Team /> },
+          { path: "joe", element: <TeamMember name="joe" /> },
+          { path: "sally", element: <TeamMember name="sally" /> },
+        ],
+      },
+    ],
+  },
+]);
+
+function NavLayout() {
+  return (
+    <>
+      <Navbar />
+      <Outlet />
+    </>
+  );
+}
+
+function TeamNavLayout() {
+  return (
+    <>
+      <TeamNav />
+      <Outlet />
+    </>
+  );
+}
+```
+
+- Remember `React Router` goes top down.
+- Say we are on "/store" page
+
+  - start at top of router. It calls default element component `<NavLayout/>`. This renders `<Navbar/>` (which renders the list of Home, Store, About, and Team)
+  - it goes down looking for a match to "/store", finds it, and renders `<Store/>` component.
+  - Therefore, `<TeamNavLayout/>` never gets called, so we don't see Team Members
+
+- Say we are on "/team/joe" page
+  - start at top of router. It calls default element component `<NavLayout/>`. This renders `<Navbar/>` (which renders the list of Home, Store, About, and Team)
+  - it goes down looking for match first to "/team"
+  - it finds it and calls `<TeamNavLayout/>`. This renders `<TeamNav/>` (which renders the list Team - Joe, and Team - Sally)
+  - it keeps going down list to find match for "joe". It finds "joe" and renders `<TeamMember name="joe" />`
+
+9.  You can also pass along a **context**
