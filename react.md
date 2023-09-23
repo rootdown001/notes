@@ -1034,7 +1034,7 @@ class App extends React.Component {
 1. Memorization for performance
 
 - Use when you have a piece of code that is slow to run, but you don't need it to run on every render
-- `useMemo` accepts as function, and a dependancy array (like `useEffect`)
+- `useMemo` accepts a function, and a dependancy array (like `useEffect`)
 - `useMemo` works by checking to see if the dependancy has changed, and if so, it runs the function
 - If the dependency has not changed, it does not re-run the function
 - `useMemo` does NOT cache values like other memorization in coding.
@@ -2335,10 +2335,10 @@ export default function App() {
 ```jsx
 const [users, setUsers] = useState([
   { id: 1, name: "Kyle" },
-  { id: 2, name: "John" }
-])
+  { id: 2, name: "John" },
+]);
 
-const [selectedUser, setSelectedUser]
+const [selectedUser, setSelectedUser] = useState();
 ```
 
 - This can give unwanted responses if `user` state changes bc of value referneces
@@ -2347,13 +2347,12 @@ const [selectedUser, setSelectedUser]
 ```jsx
 const [users, setUsers] = useState([
   { id: 1, name: "Kyle" },
-  { id: 2, name: "John" }
-])
+  { id: 2, name: "John" },
+]);
 
-const [selectedUserId, setSelectedUserId]
+const [selectedUserId, setSelectedUserId] = useState();
 
-const selectedUser = users.find(user => user.id === selectedUserId )
-
+const selectedUser = users.find((user) => user.id === selectedUserId);
 ```
 
 - Here we are storing `selectedUserId`, which is then used to derive our value of `selectedUser` (instead of making `selectedUser` a state)
@@ -2913,4 +2912,728 @@ function TeamNavLayout() {
   - it finds it and calls `<TeamNavLayout/>`. This renders `<TeamNav/>` (which renders the list Team - Joe, and Team - Sally)
   - it keeps going down list to find match for "joe". It finds "joe" and renders `<TeamMember name="joe" />`
 
-9.  You can also pass along a **context**
+9.  You can also pass along a **context**. `context` in `React Router` can be very powerful
+
+- In `<Outlet />` you pass a `context`. This is available to all children of the element
+
+```jsx
+function TeamNavLayout() {
+  return (
+    <>
+      <TeamNav />
+      <Outlet context="Hi from TeamNavLayout Outlet component" />
+    </>
+  );
+}
+```
+
+- Now any of the children of `<TeamNavLayout />` can have asscess to this `context`
+- Access with the `useOutletContext` hook from `React Router`.
+
+  - Import `{useOutletContext}` into any of the children
+  - Assign value to your desired variable and use in in your component
+
+```jsx
+import { useOutletContext } from "react-router-dom";
+
+export default function Team() {
+  const value = useOutletContext();
+
+  return <h1>Team - {value}</h1>;
+}
+```
+
+- Here the `<Team />` component can use the context because it is a child of the `<TeamNavLayout />` element in `router.jsx`
+
+```jsx
+export const router = createBrowserRouter([
+  {
+    element: <NavLayout />,
+    children: [
+      { path: "/", element: <Home /> },
+      { path: "/store", element: <Store /> },
+      { path: "/about", element: <About /> },
+      {
+        element: <TeamNavLayout />,
+        path: "/team",
+        children: [
+          { index: true, element: <Team /> },
+          { path: "joe", element: <TeamMember name="joe" /> },
+          { path: "sally", element: <TeamMember name="sally" /> },
+        ],
+      },
+    ],
+  },
+]);
+```
+
+10. How **relative links** work
+
+- So far we have used **absolute links**, as shown below. They just go right on end of url
+
+```jsx
+<li>
+  <Link to="/team/joe">Team - Joe</Link>
+</li>
+```
+
+- We can change this to a **relative link** as below. Now "joe" is REALTIVE to where it is rendered inside of `React Router`
+
+```jsx
+<li>
+  <Link to="joe">Team - Joe</Link>
+</li>
+```
+
+- BY DEFAULT when we move around with relative links, all of the links are RELATIVE TO YOUR ROUTES (ie, whatever route element you are inside of). Sometimes that is the same as relative to our url, sometimes not
+
+  - This can be seen by adding a couple of liks to our `<TeamNav />`
+  - Look at the `<TeamNav />` component below and the `router.jsx`
+
+```jsx
+import { Link } from "react-router-dom";
+
+export default function TeamNav() {
+  return (
+    <nav>
+      <ul>
+        <li>
+          <Link to="joe">Team - Joe</Link>
+        </li>
+        <li>
+          <Link to="/team/sally">Team - Sally</Link>
+        </li>
+        <li>
+          <Link to="..">.. Relative to actual route</Link>
+        </li>
+        <li>
+          <Link to=".." relative="path">
+            .. Relative to path
+          </Link>
+        </li>
+      </ul>
+    </nav>
+  );
+}
+```
+
+- Assuming we are in `"/team/sally"`, when we click `<Link to="..">.. Relative to actual route</Link>`, we go up to 1st (default) element in router b/c we are moving relative to route we are in (we are a child of `element: <TeamNavLayout />, path: "/team"`)
+
+  - Therefore we move up to `element: <NavLayout />` (`path: "/"`) route
+  - We move from `"/team/sally"` to `"/"`
+
+- BUT if we click `<Link to=".." relative="path">.. Relative to path</Link>` this move us to `path: "/team"`.
+
+  - This is because the `relative="path"` attribute means that it moves relative to the path
+  - This means we go from `"/team/sally"` to `"/team"`
+
+- We can see more of how router works by setting `path: "."` . The single dot with take you to the current url relative to route
+
+```jsx
+import { Link } from "react-router-dom";
+
+export default function TeamNav() {
+  return (
+    <nav>
+      <ul>
+        <li>
+          <Link to="joe">Team - Joe</Link>
+        </li>
+        <li>
+          <Link to="/team/sally">Team - Sally</Link>
+        </li>
+        <li>
+          <Link to=".">. Current url relative to route</Link>
+        </li>
+        <li>
+          <Link to="." relative="path">
+            . Current url relative to route
+          </Link>
+        </li>
+      </ul>
+    </nav>
+  );
+}
+```
+
+- Assuming we are in `"/team/sally"`, when we click `<Link to=".">. Current url relative to route</Link>`, we go `"/team"` . That is the current url relative to our route
+
+- BUT if we click `<Link to="." relative="path">. Current url relative to route</Link>` this keeps us at the same url because it is going to current url relative to path we are on
+
+- SO IN SUMMARRY
+
+  - If you want your routes to be relative to whatever `path` you are in, the set `relative="path`
+  - Otherwise it will be relative to where you are rendering inside of router
+
+</br>
+
+11. To have class of active added to your links, use `<NavLink>` instead of `<Link>`
+
+- Now when our `css` has `.active` that will apply to active link
+
+`styles.css`
+
+```jsx
+.active {
+  color: red;
+}
+```
+
+`Navbar.jsx`
+
+```jsx
+import { NavLink } from "react-router-dom";
+
+export default function Navbar() {
+  return (
+    <nav>
+      <ul>
+        <li>
+          <NavLink to="/">Home</NavLink>
+        </li>
+        <li>
+          <NavLink to="/about">About</NavLink>
+        </li>
+        <li>
+          <NavLink to="/store">Store</NavLink>
+        </li>
+        <li>
+          <NavLink to="/team">Team</NavLink>
+        </li>
+      </ul>
+    </nav>
+  );
+}
+```
+
+- NOTE: By default, active links apply to the route you are in. In our example above, if we click on `"/team/sally"` our `"/team"` link will be red
+
+  - This is because by default it makes the link active for the route you're in
+
+```jsx
+// ...
+    {
+      element: <TeamNavLayout />,
+      path: "/team",
+      children: [
+        { index: true, element: <Team /> },
+        { path: "joe", element: <TeamMember name="joe" /> },
+        { path: "sally", element: <TeamMember name="sally" /> },
+      ],
+// ...
+```
+
+- To make it so it DOESN'T MAKE WHOLE ROUTE ACTIVE you add `end` in your `<NavLink>`
+
+```jsx
+<li>
+  <NavLink to="/team" end>
+    Team
+  </NavLink>
+</li>
+```
+
+- `<NavLink>` also changes how we set `className` attribute.
+
+  - `className` can TAKE A FUNCTION in `<NavLink>`
+  - can take in different props like `isActive` and `isPending`
+  - Therefore `className` can change depending on if `isActive`, etc
+
+```jsx
+<li>
+  <NavLink className={({ isActive }) => ....} to="/">Home</NavLink>
+</li>
+```
+
+- Same is true for `style` property
+- Can also pass function as CHILD of `<NavLink>` so that you can have different text depending on if `isActive`
+
+```jsx
+<li>
+  <NavLink to="/">{({ isActive }) => ....}</NavLink>
+</li>
+```
+
+12. Handling errors in `React Router`
+
+- Can put `errorElement` anywhere in router. It will display error if any of children of route have an error
+- You can nest it down and put on particular children so it only applies to them
+
+```jsx
+export const router = createBrowserRouter([
+  {
+    element: <NavLayout />,
+    errorElement: <h1>Error</h1>,
+    children: [
+      { path: "/", element: <Home /> },
+      { path: "/store", element: <Store /> },
+      { path: "/about", element: <About /> },
+      {.........
+```
+
+## React Router - Dynamic Routes
+
+1.  Route is dynamically figured out from ID passed in
+
+- like ID from TeamMember.json file
+
+```jsx
+[
+  { "id": "..-......-....-...-...1", "name": "Joe"},
+  { "id": "..-......-....-...-...4", "name": "Sally"},
+  {...}
+]
+```
+
+2.  So in `router` instead of hard-coding routes, you prefix `path` with a colon
+
+- `{path: ": memberId"}`
+- the colon is followed by the ID from json
+- remove hardcoded routes and the `prop` that was passed to `<TeamMember>`
+
+`router.jsx` (partial)
+
+```jsx
+      // ....
+      {
+        element: <TeamNavLayout />,
+        path: "/team",
+        children: [
+          { index: true, element: <Team /> },
+          // CHANGES BELOW
+          { path: "memberId", element: <TeamMember /> }
+        ],
+        // .....
+```
+
+3.  Then in `<TeamNav>` you loop through members with `map` function
+
+- Will create `<li>` for each member in json list.
+
+`TeamNav.jsx`
+
+```jsx
+import { Link } from "react-router-dom";
+import { teamMembers } from "./teamMembers.json";
+
+export default function TeamNav() {
+  return (
+    <nav>
+      <ul>
+        {teamMembers.map((member) => (
+          <li key={member.id}>
+            <Link to={member.id}>Team - {member.name}</Link>
+          </li>
+        ))}
+      </ul>
+    </nav>
+  );
+}
+```
+
+- So far this works to render an `<ul>` of the `<li>` "Team - {member.name}"
+
+4.  Use `useParams()` to pass our member routing ID from `router.jsx`. In the router, whatever is after the colon (ex: in ":memberId", the `memberId` is passed in the `useParams()` return object)
+
+- So we can then use `teamMembers.find()` to find member where id === `memberId`
+- We can then reference info from this (ex: `member.name` in the rendering)
+
+`TeamMember.jsx`
+
+```jsx
+import { useParams } from "react-router-dom";
+import teamMembers from "../teamMembers.json";
+
+export default function TeamMember() {
+  const { memberId } = useParams();
+
+  const member = teamMembers.find((m) => m.id === memberId);
+
+  return <h1>TeamMember - {member.name}</h1>;
+}
+```
+
+5.  What if we want a hardcoded route AND a dynamic route
+
+- How does router know which one to use? It will always use most specific route
+
+- So if we update `router.jsx`, `TeamNav.jsx` and add `NewTeamMember.jsx` as below...
+
+`router.jsx`
+
+```jsx
+// ...
+{
+        element: <TeamNavLayout />,
+        path: "/team",
+        children: [
+          { index: true, element: <Team /> },
+          { path: ":memberId", element: <TeamMember /> },
+          { path: "new", element: <NewTeamMember /> },
+        ],
+// ...
+```
+
+`TeamNav.jsx`
+
+```jsx
+import { Link } from "react-router-dom";
+import teamMembers from "./teamMembers.json";
+
+export default function TeamNav() {
+  // console.log(teamMembers);
+
+  return (
+    <nav>
+      <ul>
+        {teamMembers.map((member) => (
+          <li key={member.id}>
+            <Link to={member.id}>Team - {member.name}</Link>
+          </li>
+        ))}
+        <li>
+          <Link to="new">New Member</Link>
+        </li>
+      </ul>
+    </nav>
+  );
+}
+```
+
+`NewTeamMember.jsx`
+
+```jsx
+export default function NewTeamMember() {
+  return <h1>New Team Member</h1>;
+}
+```
+
+- With this setup, we have "New Member" in our `<li>` list.
+- How does `router` know which route to use if we click "New Member"?
+
+  - `router` WILL ALWAYS USE THE MOST SPECIFIC ROUTE (URL). It doesn't matter the order they are in `router.jsx`. Because "new" (hardcoded) is more specific than ":memberId" it will use "new"
+
+  - If we remove "new" route, we get error b/c then it tries to use ":memberId". Get error bc in `TeamMember` the `member.name`fails bc there is not a corresponding member in json. It is trying to access `teamMember` with id of "new" (which doesn't exist)
+
+```jsx
+import { useParams } from "react-router-dom";
+import teamMembers from "../teamMembers.json";
+
+export default function TeamMember() {
+  const { memberId } = useParams();
+
+  const member = teamMembers.find((m) => m.id === memberId);
+
+  return <h1>TeamMember - {member.name}</h1>;
+}
+```
+
+    - (If we change to `member?.name` it doesn't fail bc of our "if member")
+
+6.  Wild Card Routing - We use "\*" to signify a wildcard route.
+
+- Ex: in `router` below, we added route for "/test/\*"
+
+```jsx
+export const router = createBrowserRouter([
+  {
+    element: <NavLayout />,
+    children: [
+      { path: "/", element: <Home /> },
+      // WILDCARD
+      { path: "/test/*", element: <h1>Test</h1> },
+      { path: "/store", element: <Store /> },
+      { path: "/about", element: <About /> },
+      {
+        element: <TeamNavLayout />,
+        path: "/team",
+        children: [
+          { index: true, element: <Team /> },
+          { path: ":memberId", element: <TeamMember /> },
+          { path: "new", element: <NewTeamMember /> },
+        ],
+      },
+    ],
+  },
+]);
+```
+
+- Now if url is "/text/ANYTHING", we go to this route
+
+- I think order is
+
+  - hardcoded (most specific)
+  - dynamic
+  - wildcard (least specific)
+
+7.  Can use wildcard to set an error page. We just make a `path` of "\*", and render to `element` (like `<h1> 404 </h1>`)
+
+```jsx
+export const router = createBrowserRouter([
+  {
+    element: <NavLayout />,
+    children: [
+      // wildcard error path
+      { path: "*", element: <h1>404</h1> },
+      { path: "/", element: <Home /> },
+      { path: "/store", element: <Store /> },
+      { path: "/about", element: <About /> },
+      {
+        element: <TeamNavLayout />,
+        path: "/team",
+        children: [
+          { index: true, element: <Team /> },
+          { path: ":memberId", element: <TeamMember /> },
+          { path: "new", element: <NewTeamMember /> },
+        ],
+      },
+    ],
+  },
+]);
+```
+
+- Now `router` will look at all paths and if doesn't match any, it uses LEAST SPECIFIC path of "\*"
+
+8.  Can use wildcard to go back to home page. If any url doesn't exist, will just go to home page
+
+- use `<Navigate to="/" />`
+- This is a router component that just navigates to a specific location
+
+```jsx
+export const router = createBrowserRouter([
+  {
+    element: <NavLayout />,
+    children: [
+      // wildcard error path TO HOME PAGE
+      { path: "*", element: <Navigate to="/" /> },
+      { path: "/", element: <Home /> },
+      { path: "/store", element: <Store /> },
+      { path: "/about", element: <About /> },
+      {
+        element: <TeamNavLayout />,
+        path: "/team",
+        children: [
+          { index: true, element: <Team /> },
+          { path: ":memberId", element: <TeamMember /> },
+          { path: "new", element: <NewTeamMember /> },
+        ],
+      },
+    ],
+  },
+]);
+```
+
+9.  `useNavigate` hook is available that works similar to router's `<Navigate to="..." />` component
+
+- say we wanted the `<About />` page to navigate BACK TO HOME after 1 second of being on about page
+- We define variable with `useNavigate` hook.
+
+  - Ex: `const navigate = useNavigate()`
+
+- We define where to go, like home page, with `navigate("/")`
+- Can use useEffect to `setTimeout` for going to `navigate("/")` after 1 second of being on `<About />`
+
+```jsx
+import React, { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+
+export default function About() {
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      navigate("/");
+    }, [1000]);
+
+    return () => {
+      clearTimeout(timeout);
+    };
+  }, []);
+
+  return (
+    <>
+      <h1>About</h1>
+    </>
+  );
+}
+```
+
+## React Router - Loaders
+
+1.  Using `loader` to load data for us
+
+- Above example but taking away json file... using API for teamMembers
+- Able to load data without `useEffect`
+- Cleans up our code
+
+- `loader`
+
+  - takes in a function
+  - returns a promise with all data that we need: (`return fetch(url)`)
+  - pass ability to abort: (`, {signal}`)
+  - `loader` passes along some properties: (`{ request: { signal }}`). Used to cancel request. Now if we navigate to page that gives an error, it will cancel our request
+  - DON'T need to convert to json - `loader` does that for us
+
+  `router.jsx` (partial)
+
+```jsx
+// ...
+{
+      element: <TeamNavLayout />,
+      loader: ({ request: { signal } }) => {
+        return fetch("https://jsonplaceholder.typicode.com/users", {
+          signal,
+        });
+      },
+      path: "/team",
+// ...
+```
+
+- `useLoaderData()` is a `react-router` hook that will use loader data where it is called
+- now `teamMembers` comes from `loader` data via `useLoaderData()`
+
+`TeamNav.jsx`
+
+```jsx
+import { Link, useLoaderData } from "react-router-dom";
+export default function TeamNav() {
+  const teamMembers = useLoaderData();
+
+  return (
+    <nav>
+      <ul>
+        {teamMembers.map((member) => (
+          <li key={member.id}>
+            <Link to={member.id}>Team - {member.name}</Link>
+          </li>
+        ))}
+        <li>
+          <Link to="new">New Member</Link>
+        </li>
+      </ul>
+    </nav>
+  );
+}
+```
+
+`TeamMember.jsx`
+
+```jsx
+
+```
+
+2.  Breakdown of sequesnce
+
+- in router we are at "/team" path
+- render out `<TeamNavLayout>`
+- to render this we need to load data. `loader` is called
+
+  - Everything in a loading state while it waits
+
+- when it loads data, it automatically converts to json
+- because loader is associated with element `<TeamNavLayout>` in `router`, `<TeamNavLayout>` and children can access data with `useLoaderData()`
+- now we get out `teamMembers` from url, and proceed as before
+- then in `<TeamMember>` we can get `member` (from `map` in `<TeamNav>`)from `useLoaderData()` (not from json)
+
+  - not getting `memberId` from `useParams()` anymore. Don't need `teamMembers.find(...)` anymore
+
+- Notice in `router`, the route to ":memberId" that calls `<TeamMember>` needs member info for the component
+- WE ADD A LOADER to that child route...
+
+  - same as other loader, but we are adding the user id at the end
+    to get it we are able to pass `params` here too as a paramenter. Allows us to add user as `params.memberId`
+  - Also add the `signal`
+
+`router.jsx` (Partial)
+
+```jsx
+// ...
+      {
+        element: <TeamNavLayout />,
+        loader: ({ request: { signal } }) => {
+          return fetch("https://jsonplaceholder.typicode.com/users", {
+            signal,
+          });
+        },
+        path: "/team",
+        children: [
+          { index: true, element: <Team /> },
+          {
+            path: ":memberId",
+            loader: ({ params, request: { signal } }) => {
+              return fetch(
+                `https://jsonplaceholder.typicode.com/users/${params.memberId}`,
+                {
+                  signal,
+                }
+              );
+            },
+            element: <TeamMember />,
+          },
+          { path: "new", element: <NewTeamMember /> },
+        ],
+      },
+// ...
+```
+
+- ISSUE WITH ID & `react-router`:
+
+  - In our `<Link to={member.id}>Team - {member.name}</Link>` there is an issue. Loader is passing ID from api as a number. `react-router` expects a string.
+  - So we need to change to string `<Link to={member.id.toString}>Team - {member.name}</Link>`
+
+`TeamNav.jsx`
+
+```jsx
+import { Link, useLoaderData } from "react-router-dom";
+export default function TeamNav() {
+  const teamMembers = useLoaderData();
+
+  return (
+    <nav>
+      <ul>
+        {teamMembers.map((member) => (
+          <li key={member.id}>
+            <Link to={member.id.toString()}>Team - {member.name}</Link>
+          </li>
+        ))}
+        <li>
+          <Link to="new">New Member</Link>
+        </li>
+      </ul>
+    </nav>
+  );
+}
+```
+
+3.  How to `redirect` to somewhere else from inside `loader`
+
+- `redirect` is a function from `react-router`
+- can use for error. Ex: `throw redirect("/team")`
+- call from inside loader
+
+  - check to see if `res.status === 200`. If not, `redirect` to desired page
+
+- So if ever in a `loader` and you want to redirect somewhere else, use `redirect()`
+- Code looks complicated inside of `router` BUT this cleans it up everywhere else
+
+4.  `useNavigation()` hook to get state of `loader`
+
+- can use to get state for loading. Can put anywhere. We put in `<NavLayout>`
+- returns lots of different things, inluding STATE OF LOADERS
+
+- `const { state } = useNavigaion()`
+- `state` has different properties, including `"loading"`
+
+- can use conditional render to render `<h1>Loading</h1>` if `state === "loading"`
+
+```jsx
+function NavLayout() {
+  const { state } = useNavigation();
+  return (
+    <>
+      <Navbar />
+      {state === "loading" ? <h1>Loading</h1> : <Outlet />}
+    </>
+  );
+}
+```
