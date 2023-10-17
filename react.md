@@ -3201,7 +3201,7 @@ export const router = createBrowserRouter([
         children: [
           { index: true, element: <Team /> },
           // CHANGES BELOW
-          { path: "memberId", element: <TeamMember /> }
+          { path: ":memberId", element: <TeamMember /> }
         ],
         // .....
 ```
@@ -3626,6 +3626,41 @@ export default function TeamNav() {
 
 - can use conditional render to render `<h1>Loading</h1>` if `state === "loading"`
 
+router.jsx
+
+```jsx
+// ...
+      {
+        element: <TeamNavLayout />,
+        loader: ({ request: { signal } }) => {
+          return fetch("https://jsonplaceholder.typicode.com/users", {
+            signal,
+          });
+        },
+        path: "/team",
+        children: [
+          { index: true, element: <Team /> },
+          {
+            path: ":memberId",
+            loader: ({ params, request: { signal } }) => {
+              return fetch(
+                `https://jsonplaceholder.typicode.com/users/${params.memberId}`,
+                {signal}
+              ).then(res => {
+                if (res.status === 200) return res.json;
+                throw redirect("/team")
+              })
+            },
+            element: <TeamMember />,
+          },
+          { path: "new", element: <NewTeamMember /> },
+        ],
+      },
+// ...
+```
+
+NavLayout.jsx
+
 ```jsx
 function NavLayout() {
   const { state } = useNavigation();
@@ -3636,4 +3671,50 @@ function NavLayout() {
     </>
   );
 }
+```
+
+## `process.env.NODE_ENV` variable
+
+(from research for Basic Routing Project)
+
+The `process.env.NODE_ENV` variable can be used to see if you are in production or development environment
+
+- Allows you to set different messages for each
+
+Example
+
+```jsx
+if (process.env.NODE_ENV === "production" && (isPostsError || isTodosError)) {
+  return <h2>Error fetching data...</h2>;
+}
+
+if (process.env.NODE_ENV === "development" && (isPostsError || isTodosError)) {
+  return (
+    <div>
+      <h2>Error fetching data...</h2>
+      <pre>{`${isPostsError && "Posts Error: " + isPostsError}\n${
+        isTodosError && "Todos Error: " + isTodosError
+      }`}</pre>
+    </div>
+  );
+}
+```
+
+1.  Here we use the `process.env.NODE_ENV` variable to see if we are in development or production
+
+- In "production" we return a generic error message
+
+  - "Error fetching data..."
+
+- In "development" we return a full stack error message with `<pre>` by showing the actual error
+
+  - we use short circuiting so that if there is an `isPostsError` (ie, true) then we render `"Posts Error: " + isPostsError`
+  - same for isTodosError
+
+```jsx
+<pre>
+  {`${isPostsError && "Posts Error: " + isPostsError}\n${
+    isTodosError && "Todos Error: " + isTodosError
+  }`}
+</pre>
 ```
