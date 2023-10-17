@@ -29,7 +29,9 @@
 |                                 | comment (block) highlighted         | Shift+Option+A                      | block comment highlighted                 |
 |                                 | un-comment (block) highlighted      | Shift+Option+A                      | block comment highlighted                 |
 
-# Vite
+# npm
+
+## npm - Vite
 
 | **Command**                                | **Options**     | **Notes**                        |
 | ------------------------------------------ | --------------- | -------------------------------- |
@@ -40,3 +42,41 @@
 | cd "[project name]"                        |                 |                                  |
 | npm i                                      |                 |                                  |
 | npm run dev                                |                 |                                  |
+
+## npm - json-server (run FAKE API from json files)
+
+[json-server] (https://www.npmjs.com/package/json-server)
+
+#### Create from scratch...
+
+1.  Install JSON Server
+
+`npm install -g json-server`
+
+2.  Create a db.json file with some data
+
+```json
+{
+  "posts": [{ "id": 1, "title": "json-server", "author": "typicode" }],
+  "comments": [{ "id": 1, "body": "some comment", "postId": 1 }],
+  "profile": { "name": "typicode" }
+}
+```
+
+3.  Start JSON Server
+
+`json-server --watch db.json`
+
+4.  Now if you go to http://localhost:3000/posts/1, you'll get
+
+```json
+{ "id": 1, "title": "json-server", "author": "typicode" }
+```
+
+#### If already created...
+
+1.  Create API folder with .json files
+2.  In API folder, run...
+    - npm i
+    - npm run dev
+3.  Gives a server at http://127.0.0.1:3000 to use to run fake API
