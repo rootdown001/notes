@@ -1252,4 +1252,57 @@ export default function About() {
 
 ## react router
 
-[react router] (https://github.com/rootdown001/react-router)
+[react router] (https://github.com/rootdown001/solutions-react-router)
+
+## advanced todo list
+
+[advanced todo list] (https://github.com/rootdown001/solutions-adv-todo)
+
+## Nice loading spinner & blur effect
+
+styles.css
+
+```css
+.container.loading {
+  filter: blur(5px);
+  pointer-events: none;
+}
+
+.loading-spinner::after {
+  content: "";
+  z-index: 999;
+  width: 200px;
+  height: 200px;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  translate: -50% -50%;
+  border-radius: 50%;
+  border: 20px solid transparent;
+  border-bottom-color: hsl(200, 100%, 50%);
+  animation: spin infinite 1.25s ease-in;
+  mix-blend-mode: multiply;
+}
+
+.loading-spinner::before {
+  content: "";
+  z-index: 999;
+  width: 200px;
+  height: 200px;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  translate: -50% -50%;
+  border-radius: 50%;
+  border: 20px solid transparent;
+  border-top-color: hsl(200, 100%, 50%);
+  animation: spin infinite 2s ease-in-out;
+  mix-blend-mode: multiply;
+}
+
+@keyframes spin {
+  to {
+    rotate: 360deg;
+  }
+}
+```
