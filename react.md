@@ -2427,6 +2427,52 @@ How to deal with state that is dependent on which environment you are working in
 
   e. In CREATE_REACT_APP you HAVE TO RESTART APPLICATION when you change environment variables for it to work
 
+## `process.env.NODE_ENV` variable
+
+(from research for Basic Routing Project)
+
+The `process.env.NODE_ENV` variable can be used to see if you are in production or development environment
+
+- Allows you to set different messages for each
+
+Example
+
+```jsx
+if (process.env.NODE_ENV === "production" && (isPostsError || isTodosError)) {
+  return <h2>Error fetching data...</h2>;
+}
+
+if (process.env.NODE_ENV === "development" && (isPostsError || isTodosError)) {
+  return (
+    <div>
+      <h2>Error fetching data...</h2>
+      <pre>{`${isPostsError && "Posts Error: " + isPostsError}\n${
+        isTodosError && "Todos Error: " + isTodosError
+      }`}</pre>
+    </div>
+  );
+}
+```
+
+1.  Here we use the `process.env.NODE_ENV` variable to see if we are in development or production
+
+- In "production" we return a generic error message
+
+  - "Error fetching data..."
+
+- In "development" we return a full stack error message with `<pre>` by showing the actual error
+
+  - we use short circuiting so that if there is an `isPostsError` (ie, true) then we render `"Posts Error: " + isPostsError`
+  - same for isTodosError
+
+```jsx
+<pre>
+  {`${isPostsError && "Posts Error: " + isPostsError}\n${
+    isTodosError && "Todos Error: " + isTodosError
+  }`}
+</pre>
+```
+
 ## Routing without a Library
 
 Generally use a `switch` statement in `App.jsx` to find URL we are at
@@ -3562,7 +3608,7 @@ export default function TeamNav() {
             path: ":memberId",
             loader: ({ params, request: { signal } }) => {
               return fetch(
-                `https://jsonplaceholder.typicode.com/users/${params.memberId}`,
+                `https://jsonplaceholder.typicode.com/users/${.memberId}`,
                 {
                   signal,
                 }
@@ -3616,7 +3662,7 @@ export default function TeamNav() {
 - So if ever in a `loader` and you want to redirect somewhere else, use `redirect()`
 - Code looks complicated inside of `router` BUT this cleans it up everywhere else
 
-4.  `useNavigation()` hook to get state of `loader`
+4.  `()` hook to get state of `loader`
 
 - can use to get state for loading. Can put anywhere. We put in `<NavLayout>`
 - returns lots of different things, inluding STATE OF LOADERS
@@ -3673,48 +3719,1238 @@ function NavLayout() {
 }
 ```
 
-## `process.env.NODE_ENV` variable
+## Basic Blog Project Walkthrough
 
-(from research for Basic Routing Project)
+refer to [Basic Blog Project](https://github.com/rootdown001/React-Simplified-Beginner-Projects-main/tree/master/75-76-basic-blog-project/after)
 
-The `process.env.NODE_ENV` variable can be used to see if you are in production or development environment
+Important steps:
 
-- Allows you to set different messages for each
+Setup
 
-Example
+1.  Create "after" folder
+2.  `cd client` (to client folder)
+3.  `npm create vite@latest`
+4.  `npm i`
+5.  `npm run dev`
+6.  Open new terminal to start `json-server`
+
+- `cd api`
+- `npm i`
+- `npm run dev`
+
+Now we have server on port `3000` and our application on port `5173`
+
+7.  Remove all starting vite stuff that we don't need
+8.  import css
+9.  Install 2 libraries
+
+- `npm i react-router-dom`
+- `npm i axios` (makes fetch easier)
+
+main.jsx
 
 ```jsx
-if (process.env.NODE_ENV === "production" && (isPostsError || isTodosError)) {
-  return <h2>Error fetching data...</h2>;
+import React from "react";
+import ReactDOM from "react-dom/client";
+import "./styles.css";
+import { RouterProvider } from "react-router-dom";
+import { router } from "./router";
+
+ReactDOM.createRoot(document.getElementById("root")).render(
+  <React.StrictMode>
+    {/* 1) get Router Provider (& import) */}
+    {/* 2) Pass it `router`` */}
+    <RouterProvider router={router} />
+  </React.StrictMode>
+);
+```
+
+router.jsx
+
+```jsx
+
+// 1. createBrowserRouter
+export const router = createBrowserRouter([
+  {
+    // 2. create root path and <RootLayout/> for
+    path: "/",
+    element: <RootLayout />,
+    // 3. Notice used path for root - can do either way
+    // 4. create children
+    children: [
+      {
+        children: [
+          // 5. create paths with elements
+          // NOTE: don't need "/posts" because "/" in root above
+          { path: "posts", element: <PostList /> },
+          // .........
+```
+
+Starts with doing it simple like this with `element: <PostList />`
+
+- But see below for moving the element into `<PostListRoute />` and PASSING to router with spread operator
+
+Create `<PostList />` (simple at first)
+
+PostList.jsx
+
+```jsx
+export function PostList() {
+  return <h2>PostList</h2>;
+}
+```
+
+Create `<RootLayout />` in folder `layouts`
+
+- taking place of previous `<Navbar/>` in simpler coding
+
+```jsx
+export function RootLayout() {
+  return <Outlet />;
+}
+```
+
+- ( so instead of having a `<NavLayout/>` that returns `<Navbar/>` & `<Outlet/>`, we are making `<RootLayout/>` that has the jsx code that would be in a `<Navbar/>` then `<Outlet/>`)
+
+Add `<Navigate/>` to router (from `react-router-dom`)
+
+- Now, if on index route ("/") want to route to "/posts"
+
+router.jsx
+
+```jsx
+import { Navigate } from "react-router-dom"
+
+export const router = createBrowserRouter([
+  {
+    path: "/",
+    element: <RootLayout />,
+    children: [
+      {
+        children: [
+          // Add `<Navigate/>` element at path of `index: true`
+          { index: true, element: <Navigate to="/posts" /> },
+          { path: "posts", element: <PostList /> },
+          // .........
+```
+
+Now finish `<RootLayout/>` with our jsx (brought in from sample html)
+
+- `<nav>`, `<div>`, `<ul>`, `<li>`
+- `<Link to="...>` (instaead of href)
+- `<Outlet>` (note it is in `<div className={'container}>`)
+  - by putting `<Outlet/>` in "container" this seperates from "navbar" type jsx about
+  - also lets us later add `className` logic for using our "blur" and "spinner"
+- `<ScrollRestoration/>`
+  - `react-router-dom` component that puts focus back to top when switching between pages
+
+```jsx
+import { Link, Outlet, ScrollRestoration } from "react-router-dom";
+
+export function RootLayout() {
+  return (
+    <>
+      <nav className="top-nav">
+        <div className="nav-text-large">My App</div>
+        <ul className="nav-list">
+          <li>
+            <Link to="/posts">Posts</Link>
+          </li>
+          <li>
+            <Link to="/users">Users</Link>
+          </li>
+          <li>
+            <Link to="/todos">Todos</Link>
+          </li>
+        </ul>
+      </nav>
+      <ScrollRestoration />
+      <div className={"container"}>
+        <Outlet />
+      </div>
+    </>
+  );
+}
+```
+
+If we don't use `<ScrollRestoration/>` then when we switch between pages in our nav, the scroller can leave you at random places in the page
+
+Now, back to `router.jsx`
+
+- we know that we will want to be able to navigate to a posts page AND to individual posts (same with users and individual user)
+- we will set up `children:` for "posts" route and "users" route
+
+```jsx
+export const router = createBrowserRouter([
+  {
+    path: "/",
+    element: <RootLayout />,
+    children: [
+      {
+          children: [
+          { index: true, element: <Navigate to="/posts" /> },
+          {
+            path: "posts",
+            children: [
+              // go to `<PostList>` if "/posts"
+              { index: true, element: <PostList/>},
+              // go to another component if "/posts/:postId"
+              { path: ":postId", element: <h2>Individual post page</h2> },
+            ],
+          },
+          {
+            path: "users",
+            children: [
+              { index: true, element: <UserList/> },
+              { path: ":userId", element: <h2>Individual user page</h2> },
+            ],
+          },
+          // ...
+```
+
+Again, we are pre-setting up because we know we need one `element:` for `index` and one for `"postId:`
+
+We will use `axios` to help with out `fetch`. Allows us to do it more easily.
+
+```jsx
+import axios from "axios";
+```
+
+Now need `loader`
+
+- Could add inline like we've learned, but the `router.jsx` can get very bloated
+
+```jsx
+export const router = createBrowserRouter([
+  {
+    path: "/",
+    element: <RootLayout />,
+    children: [
+      {
+          children: [
+          { index: true, element: <Navigate to="/posts" /> },
+          {
+            path: "posts",
+            children: [
+              { index: true,
+                element: <PostList/>,
+
+                // COULD PUT LOADER HERE
+                loader: ({ request: { signal } }) => {
+                  return axios
+                    .get("http://localhost:3000/posts", {signal})
+                    .then(res => res.data)
+              },
+        // ...
+```
+
+INSTEAD, we will put `loader` code INSIDE component that is using it - so we will put inside of `<PostList/>`
+
+1.  We add a loader function to `<PostList/>` that we can import to our router
+
+2.  To make even more streamlined, we will MAKE AN EXPORT OBJECT that will fill in `element` AND `loader` items to our route
+
+3.  Call it `postListRoute` and `export` it
+
+4.  object has `loader` function and `element: <PostList/>`
+
+5.  Now we don't need to `export` our components, so remove the `export` from `<PostList/>`
+
+`PostList.jsx`
+
+```jsx
+import axios from "axios";
+
+// remove `export`
+function PostList() {
+  return <h1>PostList</h1>;
 }
 
-if (process.env.NODE_ENV === "development" && (isPostsError || isTodosError)) {
+// create `loader` function just as would be in `router.jsx`
+function loader({ request: { signal } }) {
+  return axios
+    .get("http://localhost:3000/posts", { signal })
+    .then((res) => res.data);
+}
+
+// export object with `loader` function, and `element`
+export const postListRoute = {
+  loader,
+  element: <PostList />,
+};
+```
+
+Now we can spread the object (`...postListRoute`) in `router.jsx`
+
+`router.jsx`
+
+```jsx
+children: [
+          { index: true, element: <Navigate to="/posts" /> },
+          {
+            path: "posts",
+            children: [
+              {
+                index: true,
+                // spread the object - this gives us `loader` function and `element: <PostList/>`
+                ...postListRoute,
+              },
+```
+
+Now we can...
+
+1.  bring in loader data (`useLoaderData`)
+2.  set up jsx to map through posts to show each post in a card (bringing in pre-set html and changing `class` to `className`)
+3.  Set up button `<Link to={`/posts/${post.id}`}>`
+
+`PostList.jsx`
+
+```jsx
+import axios from "axios";
+import { useLoaderData, Link } from "react-router-dom";
+
+function PostList() {
+  const posts = useLoaderData();
+
   return (
-    <div>
-      <h2>Error fetching data...</h2>
-      <pre>{`${isPostsError && "Posts Error: " + isPostsError}\n${
-        isTodosError && "Todos Error: " + isTodosError
-      }`}</pre>
+    // set up jsx
+    <>
+      <h1 className="page-title">Posts</h1>
+      <div className="card-grid">
+        {/*map through posts*/}
+        {posts.map((post) => {
+          return (
+            <div key={post.id} className="card">
+              <div className="card-header">{post.title}</div>
+              <div className="card-body">
+                <div className="card-preview-text">{post.body}</div>
+              </div>
+              <div className="card-footer">
+                {/*set up `<Link>`*/}
+                <Link to={`/posts/${post.id}`} className="btn">
+                  View
+                </Link>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </>
+  );
+}
+
+function loader({ request: { signal } }) {
+  return axios
+    .get("http://localhost:3000/posts", { signal })
+    .then((res) => res.data);
+}
+
+export const postListRoute = {
+  loader,
+  element: <PostList />,
+};
+```
+
+Do same thing with `<UserList>`
+
+`UserList.jsx`
+
+```jsx
+import axios from "axios";
+import { useLoaderData, Link } from "react-router-dom";
+
+function UserList() {
+  const posts = useLoaderData();
+
+  return (
+    // set up jsx
+
+  );
+}
+
+function loader({ request: { signal } }) {
+  return axios
+    .get("http://localhost:3000/users", { signal })
+    .then((res) => res.data);
+}
+
+export const userListRoute = {
+  loader,
+  element: <UserList />,
+};
+```
+
+Now correct `router.jsx` to use `userListRoute`
+
+`router.jsx`
+
+```jsx
+//.....
+import {userListRoute} from "./pages/UserList"
+//....
+
+// ...
+children: [
+          { index: true, element: <Navigate to="/posts" /> },
+          {
+            path: "posts",
+            children: [
+              {
+                index: true,
+                // spread the object - this gives us `loader` function and `element: <PostList/>`
+                ...postListRoute,
+              },
+            ],
+          },
+          // // spread the object - this gives us `loader` function and `element: <UserList/>`
+          { path: "users", ...userListRoute },
+          { path: "todos", element: <ToDoList />},
+          ],
+// ...
+```
+
+NOW, notice `loader` in each (`<UserList/>` & `<PostList/>`) look the same except for API address
+
+- Let's make this reusable code
+- Make `api` folder & `posts.js`
+
+`posts.js`
+
+```javascript
+import axios from "axios";
+
+export function getPosts(options) {
+  return axios.get("posts", options).then((res) => res.data);
+}
+```
+
+Now we need "base" part of API (`http://localhost:3000/`)
+
+- lets make an `axios` `baseApi`
+
+`base.js`
+
+```javascript
+import axios from "axios";
+
+export const baseApi = axios.create({ baseURL: "http://localhost:3000/" });
+```
+
+Remember, `axios.create` allows us to make a `base` version of axios that works the same as `axios`
+
+Now `posts.js` can be...
+
+```javascript
+// using {baseApi}
+import { baseApi } from "./base";
+
+export function getPosts(options) {
+  // using `baseApi` instead of 'axios
+  return baseApi.get("posts", options).then((res) => res.data);
+}
+```
+
+Now in `PostList` we can call our exported `getPosts(options)` instead of the `return axios.get...`
+
+`PostList.jsx`
+
+```jsx
+import { getPosts } from "../api/posts";
+//...
+
+function loader({ request: { signal } }) {
+  return getPosts({ signal });
+}
+
+//...
+```
+
+Can use this `getPosts` wherever we want
+
+Notice that our `baseAPI` points to "http://localhost:3000/"
+
+- we want to put in a `.env` so this is used in development, and a real API used in production
+
+Make `.env.development` (not `.local` bc don't care if goes to `git`)
+
+`.env.development`
+
+```jsx
+VITE_API_URL=http://localhost:3000
+```
+
+Now can make `baseApi` point to `.env.development`
+
+`base.js`
+
+```javascript
+import axios from "axios";
+
+export const baseApi = axios.create({ baseURL: import.meta.env.VITE_API_URL });
+```
+
+Now do same this with making `users.js`, passing `getUsers`, `UserList.jsx`, etc (won't show here)
+
+But will show, in `<UserList/>` `btn`, we are using a **relative link** of `user.id.toString()`
+
+`UserList.jsx`
+
+```jsx
+//...
+<div className="card-footer">
+  <Link className="btn" to={user.id.toString()}>
+    View
+  </Link>
+</div>
+
+//...
+```
+
+Now make `TodoList.jsx`, and `todos.js`
+
+`todos.js`
+
+```javascript
+import { baseApi } from "./base";
+
+export function getTodos(options) {
+  return baseApi.get("todos", options).then((res) => res.data);
+}
+```
+
+`TodoList.jsx`
+
+```jsx
+import { useLoaderData } from "react-router-dom";
+import { getTodos } from "../api/todos";
+
+function TodoList() {
+  const todos = useLoaderData();
+
+  return (
+    <>
+      <h1 className="page-title">Todos</h1>
+      <ul>
+        {todos.map((todo) => (
+          <li className={completed ? "strike-through" : undefined}>{title}</li>
+        ))}
+      </ul>
+    </>
+  );
+}
+
+function loader({ request: { signal } }) {
+  return getTodos({ signal });
+}
+
+export const todoListRoute = {
+  loader,
+  element: <TodoList />,
+};
+```
+
+OK, let's make `Post.jsx` for individual posts
+
+We set up `router.jsx`
+
+`router.jsx`
+
+```jsx
+//...
+        children: [
+          { index: true, element: <Navigate to="/posts" /> },
+          {
+            path: "posts",
+            children: [
+              {
+                index: true,
+                ...postListRoute,
+              },
+              // make a `postRoute` spread call
+              { path: ":postId", ...postRoute },
+            ],
+          },
+//...
+```
+
+Now make `Post.jsx` (with our `postRoute`)
+
+In posts.js, create `getPost` alongside `getPosts`
+
+`posts.js`
+
+```Javascript
+import { baseApi } from "./base"
+
+export function getPosts(options) {
+  return baseApi.get("posts", options).then(res => res.data)
+}
+
+export function getPost(postId, options) {
+  return baseApi.get(`posts/${postId}`, options).then(res => res.data)
+}
+```
+
+Note `getPost()` receives `postId`. In `Post.jsx`, in `loader`, `postId` comes in from out `params`
+
+`Post.jsx`
+
+```jsx
+function Post() {
+  // useLoaderData() to get post info, including params below
+  const post = useLoaderData()
+  return ( <>
+      <h1 className="page-title">{post.title}</h1>
+      <div>{post.body}</div>
+    </>)
+}
+
+// loader recieves `params` so we can get :postId
+function loader(request: {signal}, params) {
+  return getPost(params.postId, {signal})
+}
+
+export const postRoute = {
+  loader,
+  element: <Post/>
+}
+```
+
+Now make `User.jsx`, very similar to `Post.jsx`, update `router.jsx`, update `users.js`
+Correct `router.jsx` so that `{path: "users", ...userListRoute}` has children since we will need `users` & `:userId`
+
+`router.jsx`
+
+```jsx
+//...
+{
+  path: "users",
+  children: [
+    { index: true, ...userListRoute },
+    // useRoute will be like postRoute
+    { path: ":userId", ...userRoute },
+  ],
+},
+//...
+```
+
+And add `getUser()` to `users.js`
+
+```javascript
+import { baseApi } from "./base";
+
+export function getUsers(options) {
+  return baseApi.get("users", options).then((res) => res.data);
+}
+
+export function getUser(userId, options) {
+  return baseApi.get(`users/${userId}`, options).then((res) => res.data);
+}
+```
+
+`User.jsx`
+
+```jsx
+function User() {
+  const user = useLoaderData();
+
+  return (
+    <>
+      <h1 className="page-title">{user.name}</h1>
+      <div className="page-subtitle">{user.email}</div>
+      <div>
+        <b>Company:</b> {user.company.name}
+      </div>
+      <div>
+        <b>Website:</b> {user.website}
+      </div>
+      <div>
+        <b>Address:</b> {user.address.street} {user.address.suite}{" "}
+        {user.address.city} {user.address.zipcode}
+      </div>
+    </>
+  );
+}
+
+function loader({ request: { signal }, params }) {
+  return getUser(params.userId, { signal });
+}
+
+export const userRoute = {
+  loader,
+  element: <User />,
+};
+```
+
+**Loading Spinner**
+
+- We will add loading spinner
+- css for it is
+
+```css
+.container.loading {
+  filter: blur(5px);
+  pointer-events: none;
+}
+
+.loading-spinner::after {
+  content: "";
+  z-index: 999;
+  width: 200px;
+  height: 200px;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  translate: -50% -50%;
+  border-radius: 50%;
+  border: 20px solid transparent;
+  border-bottom-color: hsl(200, 100%, 50%);
+  animation: spin infinite 1.25s ease-in;
+  mix-blend-mode: multiply;
+}
+
+.loading-spinner::before {
+  content: "";
+  z-index: 999;
+  width: 200px;
+  height: 200px;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  translate: -50% -50%;
+  border-radius: 50%;
+  border: 20px solid transparent;
+  border-top-color: hsl(200, 100%, 50%);
+  animation: spin infinite 2s ease-in-out;
+  mix-blend-mode: multiply;
+}
+
+@keyframes spin {
+  to {
+    rotate: 360deg;
+  }
+}
+```
+
+We put in `RootLayout.jsx`
+
+- use `useNavigation()` to get loading state
+
+```jsx
+const { state } = useNavigation();
+const isLoading = state === "loading";
+```
+
+We want the **loading spinner** to be below the nav bar so in `RootLayout.jsx` we insert our logic below `<Nav></Nav>`
+
+- Logic will alter `className` if `isLoading` so it gets loading & spinner css if `isLoading`
+
+`RootLayout.jsx`
+
+```jsx
+//...
+
+return (
+  <>
+    <nav className="top-nav">
+      <div className="nav-text-large">My App</div>
+      <ul className="nav-list">
+        <li>
+          <Link to="/posts">Posts</Link>
+        </li>
+        <li>
+          <Link to="/users">Users</Link>
+        </li>
+        <li>
+          <Link to="/todos">Todos</Link>
+        </li>
+      </ul>
+    </nav>
+    <ScrollRestoration />
+    {isLoading && <div className="loading-spinner" />}
+    <div className={`container ${isLoading ? "loading" : ""}`}>
+      <Outlet />
+    </div>
+  </>
+);
+//...
+```
+
+#### **404 Error Page**
+
+To add a **404 Error Page**. all we have to do is add a `path: "*"` in router. Router takes most specific first... so if it can't find a page anywhere, it will THEN choose the wildcard.
+
+`router.jsx`
+
+```jsx
+//...
+ },
+          { path: "todos", ...todoListRoute },
+          { path: "*", element: <h1>404 - Page Not Found</h1> },
+        ],
+      },
+    ],
+  },
+])
+//...
+```
+
+#### **Error Page** with Generic message in development, and stack trace in production
+
+To add **Error Page** with Generic message in development, and stack trace in production, we can just use `errorElement` in router. Can be as simple as...
+
+`router.jsx`
+
+```jsx
+//...
+path: "/",
+    element: <RootLayout />,
+    errorElement: <h1>Error</h1>
+    children: [
+//...
+```
+
+We want this to render inside out `<RootLayout/>` but outside of all of our `[children]` content. So inside of `[children]` we create our `errorElement` and give IT children
+
+```jsx
+//...
+  {
+    path: "/",
+    element: <RootLayout />,
+    children: [
+      {
+        // make errorElement at top inside children, then give IT children, and put all of our children inside of it
+        errorElement: <h1>Error</h1>,
+        children: [
+          { index: true, element: <Navigate to="/posts" /> },
+          {
+            path: "posts",
+            children: [
+              {
+                index: true,
+                ...postListRoute,
+              },
+              { path: ":postId", ...postRoute },
+            ],
+          },
+          {
+            path: "users",
+            children: [
+              { index: true, ...userListRoute },
+              { path: ":userId", ...userRoute },
+            ],
+          },
+          { path: "todos", ...todoListRoute },
+          { path: "*", element: <h1>404 - Page Not Found</h1> },
+        ],
+      },
+    ],
+  },
+])
+//...
+```
+
+SO IN SUMMARY, we are moving all chiuldren 1 level deeper, so we can wrap all of our children inside of `errorElement`. So if there is an error in any of the children, it will render the `errorElement` instead.
+
+Now we want error message to be different depending on if in development or prodection, so lets make a new function we can reference in `errorElement`
+
+At bottom of `router.jsx` we can add...
+
+```jsx
+//...
+
+function ErrorPage() {
+  const error = useRouteError()
+
+  return (
+    <>
+      <h1>Error - Something went wrong</h1>
+      {import.meta.env.MODE !== "production" && (
+        <>
+          <pre>{error.message}</pre>
+          <pre>{error.stack}</pre>
+        </>
+      )}
+    </>
+  )
+```
+
+The hook `useRouteError()` gets info from the `errorElement` above.
+
+- so it will give error of `<h1>Error - Something went wrong</h1>`
+- Then we use `import.meta.env.MODE` to get our production or development mode. So if `import.meta.env.MODE !== "production"` then we show `{error.message}` & `{error.stack}`.
+- Now we just make `<ErrorPage/>` the `element:` for `erroeElement`
+
+`router.jsx`
+
+```jsx
+
+export const router = createBrowserRouter([
+  {
+    path: "/",
+    element: <RootLayout />,
+    children: [
+      {
+        // errorElement now points to function beloe (instead of <h1>...)
+        errorElement: <ErrorPage />,
+        children: [
+          { index: true, element: <Navigate to="/posts" /> },
+          {
+            path: "posts",
+            children: [
+              {
+                index: true,
+                ...postListRoute,
+              },
+              { path: ":postId", ...postRoute },
+            ],
+          },
+          {
+            path: "users",
+            children: [
+              { index: true, ...userListRoute },
+              { path: ":userId", ...userRoute },
+            ],
+          },
+          { path: "todos", ...todoListRoute },
+          { path: "*", element: <h1>404 - Page Not Found</h1> },
+        ],
+      },
+    ],
+  },
+])
+
+// create `ErrorPage` to use as `element` for `errorElement`
+function ErrorPage() {
+  const error = useRouteError()
+
+  return (
+    <>
+      <h1>Error - Something went wrong</h1>
+      {import.meta.env.MODE !== "production" && (
+        <>
+          <pre>{error.message}</pre>
+          <pre>{error.stack}</pre>
+        </>
+      )}
+    </h1>
+  )
+}
+
+```
+
+Now we wan to correct our `Post.jsx` so it can load comments and user info. To do this, we need to get info on comments & user, as well as posts.
+
+- right now it is as follows:
+
+`Post.jsx`
+
+```jsx
+//...
+function Post() {
+  const post = useLoaderData()
+// ...
+function loader(request: {signal}, params) {
+  return getPost(params.postId, {signal})
+}
+//...
+```
+
+- we can INSTEAD GET ALL OF OUR INFO (`comments`, `post`, `user`) in loader.
+- First lets make a `getComments()` in `comments.js`
+
+`comments.js`
+
+```javascript
+import { baseApi } from "./base";
+
+export function getComments(postId, options) {
+  return baseApi
+    .get(`posts/${postId}/comments`, options)
+    .then((res) => res.data);
+}
+```
+
+- Now we can change `loader` in `Post.jsx`
+
+`Post.jsx`
+
+```jsx
+//...
+function Post() {
+  const { comments, post, user } = useLoaderData();
+
+//...
+
+function loader({ request: { signal }, params: { postId } }) {
+  const comments = getComments(postId, { signal });
+  const post = getPost(postId, { signal });
+  const user = getUser(post.userId, { signal });
+
+  return { comments, post, user };
+}
+//...
+```
+
+- Now it will get all of the infor BUT it won't work
+- We need to wait for `post` to finish, before `user` can run because `user` requires `post.userId`
+- Also, we need `comments` and `user` to have Promise come back too
+
+- we can use `async`/`await`
+- we could write it like this...
+
+```jsx
+async function loader({ request: { signal }, params: { postId } }) {
+  const comments = await getComments(postId, { signal });
+  const post = await getPost(postId, { signal });
+  const user = await getUser(post.userId, { signal });
+
+  return { comments, post, user };
+```
+
+- BUT if we slow network to 3G and watch, we see in the **waterfall** that each waits for the previous to finish
+
+WHEN USING `async`/`await`, PUT YOUR `await`AS LATE AS POSSIBLE
+
+- so we can leave `const post = await getPost(postId, { signal })`
+- but we can put our other `await`s LATER
+
+`Post.jsx`
+
+```jsx
+//...
+function Post() {
+  const { comments, post, user } = useLoaderData();
+
+//...
+async function loader({ request: { signal }, params: { postId } }) {
+  const comments = getComments(postId, { signal });
+  const post = await getPost(postId, { signal });
+  const user = getUser(post.userId, { signal });
+
+  return { comments: await comments, post, user: await user };
+}
+//...
+```
+
+THIS WAY, `comments`and `user` can start to get their info EARLIER because they haven't hit `await` until ready to export object
+
+-All thisis saying that when you have a `Promise` you want to `await` for it before you `return` it `loader` or you will be returning `Promise` istead of info you meant to return
+
+Now we just do all of our `jsx`for `Post.jsx` using our new `comments` and `user` info
+
+`Post.jsx`
+
+```jsx
+//...
+  return (
+    <>
+      <h1 className="page-title">{post.title}</h1>
+      <span className="page-subtitle">
+        By: <Link to={`/users/${user.id}`}>{user.name}</Link>
+      </span>
+      <div>{post.body}</div>
+
+      <h3 className="mt-4 mb-2">Comments</h3>
+      <div className="card-stack">
+        {comments.map((comment) => (
+          <div key={comment.id} className="card">
+            <div className="card-body">
+              <div className="text-sm mb-1">{comment.email}</div>
+              {comment.body}
+            </div>
+          </div>
+        ))}
+      </div>
+    </>
+  );
+}
+
+//...
+```
+
+- NOTE: in the `<Link to={`/users/${user.id}`}>{user.name}</Link>`, the "/users..." needs to be and absolute link
+
+Now we can finish `User.jsx` in the same way, by making loader also get info on `posts` and `todos`
+
+`User.jsx
+
+```jsx
+//...
+function User() {
+  const { user, posts, todos } = useLoaderData()
+
+//...
+async function loader({ request: { signal }, params: { userId } }) {
+  const posts = getPosts({ signal, params: { userId } })
+  const todos = getTodos({ signal, params: { userId } })
+  const user = getUser(userId, { signal })
+
+  return { posts: await posts, todos: await todos, user: await user }
+}
+//...
+```
+
+- NOTE: here, all of our `await`s can be at the end, because NONE OF THE CALLS (`getPosts()`, `getTodos()`, `getUser()`) DEPEND ON EACH OTHER
+
+- Now we do our jsx for `User.jsx`
+
+`User.jsx`
+
+```jsx
+//...
+  return (
+    <>
+      <h1 className="page-title">{user.name}</h1>
+      <div className="page-subtitle">{user.email}</div>
+      <div>
+        <b>Company:</b> {user.company.name}
+      </div>
+      <div>
+        <b>Website:</b> {user.website}
+      </div>
+      <div>
+        <b>Address:</b> {user.address.street} {user.address.suite}{" "}
+        {user.address.city} {user.address.zipcode}
+      </div>
+
+      <h3 className="mt-4 mb-2">Posts</h3>
+      <div className="card-grid">
+        {posts.map(post => (
+          <PostCard key={post.id} {...post} />
+        ))}
+      </div>
+      <h3 className="mt-4 mb-2">Todos</h3>
+      <ul>
+        {todos.map(todo => (
+          <TodoItem key={todo.id} {...todo} />
+        ))}
+      </ul>
+    </>
+  )
+}
+//...
+```
+
+- Note that the jsx under `posts.map` in `<div className="card-grid">` is the same as jsx used for other times we create a Post card
+- same for jsx for Todo items
+- so we will make them their own components
+- create a folder `components`, and add `TodoItem.jsx` & `PostCard.jsx`
+
+`TodoItem.jsx`
+
+```jsx
+export function TodoItem({ completed, title }) {
+  return <li className={completed ? "strike-through" : undefined}>{title}</li>;
+}
+```
+
+- Now we can call `<TodoItem/>` in our `TodoList.jsx` also
+
+`TodoList.jsx`
+
+```jsx
+//...
+function TodoList() {
+  const todos = useLoaderData();
+
+  return (
+    <>
+      <h1 className="page-title">Todos</h1>
+      <ul>
+        {todos.map((todo) => (
+          <TodoItem key={todo.id} {...todo} />
+        ))}
+      </ul>
+    </>
+  );
+}
+//...
+```
+
+Make our `PostCard.jsx`
+
+`PostCard.jsx`
+
+```jsx
+import { Link } from "react-router-dom";
+
+export function PostCard({ id, title, body }) {
+  return (
+    <div className="card">
+      <div className="card-header">{title}</div>
+      <div className="card-body">
+        <div className="card-preview-text">{body}</div>
+      </div>
+      <div className="card-footer">
+        <Link className="btn" to={`/posts/${id}`}>
+          View
+        </Link>
+      </div>
     </div>
   );
 }
 ```
 
-1.  Here we use the `process.env.NODE_ENV` variable to see if we are in development or production
-
-- In "production" we return a generic error message
-
-  - "Error fetching data..."
-
-- In "development" we return a full stack error message with `<pre>` by showing the actual error
-
-  - we use short circuiting so that if there is an `isPostsError` (ie, true) then we render `"Posts Error: " + isPostsError`
-  - same for isTodosError
+We can go backand call this in our `PostList.jsx` (instead of having all the jsx written out in each different component)
 
 ```jsx
-<pre>
-  {`${isPostsError && "Posts Error: " + isPostsError}\n${
-    isTodosError && "Todos Error: " + isTodosError
-  }`}
-</pre>
+//...
+function PostList() {
+  const posts = useLoaderData();
+
+  return (
+    <>
+      <h1 className="page-title">Posts</h1>
+      <div className="card-grid">
+        {posts.map((post) => (
+          <PostCard key={post.id} {...post} />
+        ))}
+      </div>
+    </>
+  );
+}
+//...
+```
+
+Now we finish our `User.jsx` jsx with `<PostCard/>` & `<TodoItem/>`
+
+`User.jsx`
+
+```jsx
+//...
+function User() {
+  const { user, posts, todos } = useLoaderData();
+
+  return (
+    <>
+      <h1 className="page-title">{user.name}</h1>
+      <div className="page-subtitle">{user.email}</div>
+      <div>
+        <b>Company:</b> {user.company.name}
+      </div>
+      <div>
+        <b>Website:</b> {user.website}
+      </div>
+      <div>
+        <b>Address:</b> {user.address.street} {user.address.suite}{" "}
+        {user.address.city} {user.address.zipcode}
+      </div>
+
+      <h3 className="mt-4 mb-2">Posts</h3>
+      <div className="card-grid">
+        {posts.map((post) => (
+          <PostCard key={post.id} {...post} />
+        ))}
+      </div>
+      <h3 className="mt-4 mb-2">Todos</h3>
+      <ul>
+        {todos.map((todo) => (
+          <TodoItem key={todo.id} {...todo} />
+        ))}
+      </ul>
+    </>
+  );
+}
+//...
 ```

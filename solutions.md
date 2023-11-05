@@ -1252,11 +1252,11 @@ export default function About() {
 
 ## react router
 
-[react router] (https://github.com/rootdown001/solutions-react-router)
+[react router](https://github.com/rootdown001/solutions-react-router)
 
 ## advanced todo list
 
-[advanced todo list] (https://github.com/rootdown001/solutions-adv-todo)
+[advanced todo list](https://github.com/rootdown001/solutions-adv-todo)
 
 ## Nice loading spinner & blur effect
 
@@ -1306,3 +1306,9 @@ styles.css
   }
 }
 ```
+
+## Basic Blog Project Walkthrough
+
+refer to [Basic Blog Project](https://github.com/rootdown001/React-Simplified-Beginner-Projects-main/tree/master/75-76-basic-blog-project/after)
+
+(Below are SELECT jsx pages with comments from Kyle's video)
