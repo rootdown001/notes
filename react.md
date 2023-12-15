@@ -1769,11 +1769,16 @@ function App() {
           id="email"
           {/* we spread the properties of register method to be able to use options of the method*/}
           {/* pass to `register` the name of input field. Ex... `{...register("email")}` - just by passing name, register is doing all the behind the scenes things on its own*/}
+
           {...register("email", {
-            {/* if you want required to have a message, need to pass an object as below*/}
+
+          {/* if you want required to have a message, need to pass an object as below*/}
+
             required: { value: true, message: "Required" },
-            {/*validate takes the value of input and performs the logic you want*/}
-            validate: (value) => {
+
+          {/*validate takes the value of input and performs the logic you want*/}
+
+          validate: (value) => {
               if (!value.endsWith("@webdevsimplified.com")) {
                 return "Must end with @webdevsimplified.com";
               }
@@ -4954,3 +4959,2958 @@ function User() {
 }
 //...
 ```
+
+## React Router - Get Request - Search Bar
+
+- `get` requests (from `<input>`) get sent to `loader`
+- `post` requests (from `<input>`) get sent to `action`
+
+Take the following example of `router.jsx` & `TodoList.jsx`
+
+`router.jsx`
+
+```jsx
+import { createBrowserRouter } from "react-router-dom";
+import { TodoList } from "./TodoList";
+import NewTodo from "./NewTodo";
+
+export const router = createBrowserRouter([
+  {
+    index: true,
+    element: <TodoList />,
+    loader: ({ request: { signal } }) => {
+      return fetch("http://localhost:3000/todos", { signal });
+    },
+  },
+  {
+    path: "/new",
+    element: <NewTodo />,
+  },
+]);
+```
+
+`TodoList.jsx`
+
+```jsx
+import { Link, useLoaderData } from "react-router-dom";
+import { TodoItem } from "./TodoItem";
+
+export function TodoList() {
+  const todos = useLoaderData();
+
+  return (
+    <div className="container">
+      <h1 className="page-title mb-2">
+        Todos
+        <div className="title-btns">
+          <Link to="/new" className="btn">
+            New
+          </Link>
+        </div>
+      </h1>
+
+      <form className="form">
+        <div className="form-row">
+          <div className="form-group">
+            <label htmlFor="query">Search</label>
+            <input type="search" name="query" id="query" />
+          </div>
+          <button className="btn">Search</button>
+        </div>
+      </form>
+
+      <ul>
+        {todos.map((todo) => (
+          <TodoItem key={todo.id} {...todo} />
+        ))}
+      </ul>
+    </div>
+  );
+}
+```
+
+We want to be able to setup a **SEARCH BAR**
+
+- Note that when we hit submit on a search it is just getting data from `loader` for new url with query info
+- So we can setup action to get that info to the `loader` in `router`
+
+- `React Router` has it's own `<Form>` so we change `<form>` to `<Form>`
+
+`TodoList.jsx`
+
+```jsx
+//...
+<Form className="form">
+  <div className="form-row">
+    <div className="form-group">
+      <label htmlFor="query">Search</label>
+      <input type="search" name="query" id="query" />
+    </div>
+    <button className="btn">Search</button>
+  </div>
+</Form>
+//...
+```
+
+- cancels default refresh behavior on its own
+- when hit Search it updates url with query
+- calls the `loader`
+- it is passind along all the data for the form
+
+- Note: In `<input name="query">` "query" (OR WHATEVER YOU CALL IT) is what shows up in search bar. Then the `value` is what it "=" from search bar
+
+So in `loader` we can
+
+- RECEIVE URL (add `url` to `loader`s `request` object)
+- use `new URL()` object to get url info, specifically `.searchParams`
+- get value of out `<input name="query"> from searchbar`
+
+`router.jsx`
+
+```jsx
+//...
+export const router = createBrowserRouter([
+  {
+    index: true,
+    element: <TodoList />,
+
+    // 1. add url to loader request: object
+    loader: ({ request: { signal, url } }) => {
+      // 2. create a new variable that receives searchParams from new url object
+      const searchParams = new URL(url).searchParams;
+
+      // 3. get value of search bar from doing .get on the name passed in searchParams
+      const query = searchParams.get("query");
+
+      // 4. Add `?q=${query}` to end of url
+      return fetch(`http://localhost:3000/todos?q=${query}`, { signal });
+    },
+  },
+  {
+    path: "/new",
+    element: <NewTodo />,
+  },
+]);
+```
+
+The way this is working...
+
+1.  By default, `<form>` (& `router` `<Form>`) have a `method="get"` and `action="/"` (action set to current url)
+
+- So `<Form>` is saying to do a `get` request at `"/"` url
+- In `router` this is the same as doing a data request (at `loader`)
+
+2.  So it calls `loader` and passes url (because we put in `loader` `request`)
+3.  Gets `.searchParams` and uses key "query" to `get` our value
+4.  Calls url with that `q=`
+
+How `loading` state works
+
+1.  use the `useNavigation()` hook to get state
+
+```jsx
+const { state } = useNavigation();
+```
+
+2.  check to see if `state==="submitting"`. But we aren't doing submission, we are going a `get.` In a `get` request, "submitting" is equal to "loading"
+
+`TodoList.jsx`
+
+```jsx
+//...
+{
+  state === "loading" ? (
+    "Loading..."
+  ) : (
+    <ul>
+      {todos.map((todo) => (
+        <TodoItem key={todo.id} {...todo} />
+      ))}
+    </ul>
+  );
+}
+//...
+```
+
+Hook up search bar to url
+
+- right now, url dictates what `loader` does, but search bar not showing same thing always
+- so we want thatever is in `query` in url to be copied to search bar when page is loading
+- do that by doing TWO things...
+
+  - 1. get `query` passed from `loader` (as well as `todos`). And then in search bar `<input>` make `defaultValue={query}`
+
+so for "1)"...
+
+`router.jsx`
+
+```jsx
+//...
+export const router = createBrowserRouter([
+  {
+    index: true,
+    element: <TodoList />,
+
+    // we are going to return an object... create an async / await
+    loader: async ({ request: { signal, url } }) => {
+      const searchParams = new URL(url).searchParams;
+      // add "" instaead of query if query empty
+      const query = searchParams.get("query") || "";
+
+      // return object so we can pass `query`
+      return {
+        //  return query from searchParams
+        searchParams: { query },
+        //  our fetch under key `todos
+        todos: await fetch(`http://localhost:3000/todos?q=${query}`, {
+          signal,
+        }).then((res) => res.json()),
+      };
+    },
+  },
+//...
+```
+
+`TodoList.jsx`
+
+```jsx
+//...
+export function TodoList() {
+  const {
+    todos,
+    searchParams: { query },
+  } = useLoaderData();
+  const { state } = useNavigation();
+//...
+    <input type="search" name="query" id="query" defaultValue={query} />
+//...
+```
+
+But that is only half of it. If we hit back button, search bar doesn't change. Need to manually set searchbar value each time query changes
+
+- 2. SO SECOND PART is to
+
+  - create a `ref`: `{const queryRef = useRef()}`
+  - change `defaultValue={query}` to `ref={queryRef}`
+  - create a `useEffect` to update `queryRef` to `query` each time `query` changes
+
+  Therefore, `queryRef` (or query input) is always going to be synched to what is pushed down from `searchParams`
+
+`TodoList.jsx`
+
+```jsx
+//...
+export function TodoList() {
+  const {
+    todos,
+    searchParams: { query },
+  } = useLoaderData();
+  const { state } = useNavigation();
+
+  // create queryRef
+  const queryRef = useRef();
+
+  // create useEffect
+  useEffect(() => {
+    queryRef.current.value = query;
+  }, [query]);
+//...
+    // change devaultValue to `ref={queryRef}`
+    <input type="search" name="query" id="query" ref={queryRef} />
+//...
+```
+
+## React Router - Post Request - Action
+
+Use `action` to mutate or change data on server
+
+It calls `action`basically whenever it isn't a `get` request
+
+- `post` requests (from `<Form>`) get sent to `action`
+- (`get` requests (from `<Form>`) get sent to `loader`)
+
+When we want to change something in database from our input, we...
+
+1.  use `<Form>` to use react router `Form`
+2.  in `<Form>` change `method` to `post`
+
+- `post` will call `action` in router
+
+3.  create an `action` in router at level url calls (here it is "/new")
+
+`NewTodo.jsx`
+
+```jsx
+export default function NewTodo() {
+  return (
+    <div className="container">
+      <h1 className="page-title">New Todo</h1>
+      {/* use react router form */}
+      {/* change method to post */}
+      <Form className="form" method="post">
+        <div className="form-row">
+//...
+</div>
+</div>
+  )
+```
+
+NOTE: `<Form className="form" method="post">` also has an `action=` we can use which is set to current url by default
+
+So now we go over to `router.jsx`. Because `<Form></Form>` `method` is "post", it will look for an action on the path sent to in our `router`
+
+1.  Create `action` in loader
+
+- `action` takes in a `{request}`
+- call for `request.formData()` to get all data from `Form`
+
+  - `const formData = await request.formData()`
+  - this is async response, so `await`
+
+- (if you look back, can see that `request` will be sent a key: of "title" (bc `name="title"`), and value: of input field )
+- then `get` the value of key: "title"
+
+  - `const title = formData.get("title")`
+
+2. Now we make our `fetch` request (INSIDE of `action`)
+
+- `fetch("http://...")`
+- as second paramenter, pass object with
+
+  - `method: "POST"`, // saying will be a POST
+  - `signal: request.signal`,
+  - `headers: {"Content-Type": "application/json"}`
+  - `body: JSON.stringify({title, completed: false})`, // passing stringified value to post as body. title is shorthand for title: title. we are passing object {title: title, completed: false}
+
+- have the `await fetch()` come back as `todo`
+- `parse` the fetch response
+
+  - `.then(res => res.json())`
+
+- `return redirect("/")` // need to return something. redirect back to home page
+
+`router.jsx`
+
+```jsx
+{
+    path: "/new",
+    element: <NewTodo />,
+    //  create action
+    //  it is an async request
+    action: async ({ request }) => {
+      // retrieve formData from request
+      const formData = await request.formData();
+      // retrieve input value (under key of "title")
+      const title = formData.get("title");
+
+      // create await fetch
+      //pass object with our POST info
+      const todo = await fetch("http://localhost:3000/todos", {
+        method: "POST",
+        signal: request.signal,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title }),
+        // parse the fetch response
+      }).then((res) => res.json());
+
+      // return a redirect
+      return redirect("/");
+    },
+  },
+```
+
+Now we should validate our input (`title`)
+
+2 steps:
+
+- 1. put a validation in `action`
+
+  ```jsx
+  if (title === "") {
+    return "Title is required";
+  }
+  ```
+
+- 2.  use the info in `NewTodo.jsx` with `useActionData()`
+
+  - `useActionData()` is a hook to get info `return`ed from `action`
+  - `const errorMessage = useActionData()`
+  - then can print `errorMessage` in jsx render
+
+`router.jsx`
+
+```jsx
+{
+    path: "/new",
+    element: <NewTodo />,
+    action: async ({ request }) => {
+      const formData = await request.formData();
+      const title = formData.get("title");
+
+      // add validation
+      if(title === "") {
+        return "Title is required"
+      }
+
+      const todo = await fetch("http://localhost:3000/todos", {
+        method: "POST",
+        signal: request.signal,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title }),
+      }).then((res) => res.json());
+
+      return redirect("/");
+    },
+  },
+```
+
+`NewTodo.jsx`
+
+```jsx
+//...
+export default function NewTodo() {
+  // get message from useActionData()
+  const errorMessage = useActionData()
+
+  return (
+    <div className="container">
+      <h1 className="page-title">New Todo</h1>
+      <Form className="form" method="post">
+
+        {/* display errorMessage from useActionData() hook */}
+        <div>{errorMessage}</div>
+//...
+    </div>
+  )
+```
+
+With `Form` we want to account for slow connection
+
+- use `useNavigation()` hook to get `{state}`. `state` id different for `loader` vs. `action`
+
+  - with `loader`, state is "loading"
+  - with `action`, state is "submitting"
+
+- so we canget state
+
+  - `const isSubmitting = state === "submitting" || state === "loading"`
+  - written as "submitting" || "loading" because it calls `action` (which uses "submitting" and THEN calls `loader` to render page)
+
+- can make button respond differently if `isSubmitting === true`
+
+`NewTodo.jsx`
+
+```jsx
+//...
+export default function NewTodo() {
+
+  const errorMessage = useActionData();
+
+  //get state
+  const { state } = useNavigation();
+  // create isSubmitting to be true if "submitting" or "loading"
+  const isSubmitting = state === "submitting" || state === "loading";
+
+  return (
+    <div className="container">
+      <h1 className="page-title">New Todo</h1>
+      <Form className="form" method="post">
+        <div>{errorMessage}</div>
+//...
+
+          {/* disable button if waiting */}
+          {/* button will read "Loading" if waiting */}
+          <button disabled={isSubmitting} className="btn">
+            {isSubmitting ? "Loading" : "Submit"}
+          </button>
+        </div>
+      </Form>
+    </div>
+  );
+}
+
+```
+
+## Advanced Blog Project Walkthrough
+
+refer to [Basic Blog Project](https://github.com/rootdown001/React-Simplified-Beginner-Projects-main/tree/master/78-79-advanced-blog-project/after)
+
+Create ability to make new posts...
+
+Add new path to router
+
+`router.jsx`
+
+```jsx
+//...
+    {
+    path: "posts",
+      children: [
+        {
+          index: true,
+          ...postListRoute,
+        },
+        { path: ":postId", ...postRoute },
+        { path: "new", ...newPostRoute },
+      ],
+//...
+```
+
+Create NewPost.jsx
+
+`NewPost.jsx`
+
+```jsx
+
+```
+
+# Advanced React Course
+
+[React Simplified - Advanced](https://courses.webdevsimplified.com/view/courses/react-simplified-advanced)
+
+## Portals
+
+Portals are a way to take content inside React hierarchy and actually render it somewhere else in the DOM
+
+- We can render into some other `div`, or at `body` or where we want
+
+- Will use `createPortal()` to solve
+
+Say we have `App.jsx` below
+
+- The `AlertMessage` component probably shouldn't be wrapped in `<div>` with everything else.
+- Styles in the `div` will effect where `AlertMessage` shows, and we don't want that
+
+```jsx
+export default function App() {
+  const [isOpen, setIsOpen] = useState(false);
+
+  return (
+    <div style={{ position: "relative", marginTop: "100px" }}>
+      <h1>App Content</h1>
+      <button onClick={() => setIsOpen(true)}>Show Message</button>
+      <AlertMessage isOpen={isOpen} onClose={() => setIsOpen(false)}>
+        Secret Message
+        <br />
+        Click To Close
+      </AlertMessage>
+    </div>
+  );
+}
+
+function AlertMessage({ children, onClose, isOpen }) {
+  if (!isOpen) return null;
+
+  return (
+    <div
+      onClick={onClose}
+      style={{
+        cursor: "pointer",
+        position: "absolute",
+        top: ".5rem",
+        left: "50%",
+        translate: "-50%",
+        background: "#777",
+        color: "white",
+        borderRadius: ".5rem",
+        padding: ".5rem",
+      }}
+    >
+      {children}
+    </div>
+  );
+}
+```
+
+To use `createPortal`
+
+1.  import from `react-dom`
+
+- `import { createPortal } from "react-dom";`
+- Takes 2 paramenter.
+
+  - first is everything you want to render (ex: `div`)
+  - second it WHERE you want it to render
+
+2.  Wrap everything you want to render in `createPortal()` function
+
+```jsx
+return createPortal(
+  <div
+    onClick={onClose}
+    style={{
+      cursor: "pointer",
+      position: "absolute",
+      top: ".5rem",
+      left: "50%",
+      translate: "-50%",
+      background: "#777",
+      color: "white",
+      borderRadius: ".5rem",
+      padding: ".5rem",
+    }}
+  >
+    {children}
+  </div>,
+  document.body
+);
+```
+
+So now, Secret Message shows at top of `body`, not affected by the `div` that `AlertMessage` is in
+
+If you `inspect` page(when Show Message is clicked), you see that all the code (& styles) for `AlertMessage` is just appended inside of `body`
+
+**`createPortal` allows you to take any dom you want and make it render somewhere else**
+
+Few things to be aware of...
+
+1.  Probably shouldn't be appending things directly to the body
+
+- can cause performance issues, and a lot of libraries append to DOM so can get messy
+
+- INSTEAD can go into `index.html` and make a dedicated `div` with `id="alertmessages"`
+
+  `index.html`
+
+```jsx
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Vite + React</title>
+</head>
+<body>
+  <div id="root"></div>
+
+  // add dedicated div for messages from portal
+  <div id="alert-messages"></div>
+
+  <script type="module" src="/src/main.jsx"></script>
+</body>
+</html>
+```
+
+- Now we can just send to `document.querySelector("#alert-messages")`
+
+2.  Event Propogation is different for javascript & React
+
+- (Normally in of javascript, if you click in an object (like inside of div) it bubbles up in the html (here in `index.html`). Here the `createPortal` code is inserted into body when clicked. Normally it would bubble up to alert messages `div`, then `body`, all the way up to `<html>` )
+
+- BUT IN REACT, it will bubble up in the DOM in jsx where it is. So all the events that happen in `AlertMessage` (that returns the `createPortal`) bubble up to the `div` that holds `AlertMessage`
+
+So final `createPortal` Example looks like...
+
+`index.html`
+
+```jsx
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Vite + React</title>
+</head>
+<body>
+  <div id="root"></div>
+
+  // add dedicated div for messages from portal
+  <div id="alert-messages"></div>
+
+  <script type="module" src="/src/main.jsx"></script>
+</body>
+</html>
+```
+
+`App.jsx`
+
+```jsx
+import React, { useState } from "react";
+import { createPortal } from "react-dom";
+
+export default function App() {
+  const [isOpen, setIsOpen] = useState(false);
+
+  return (
+    <div style={{ position: "relative", marginTop: "100px" }}>
+      <h1>App Content</h1>
+      <button onClick={() => setIsOpen(true)}>Show Message</button>
+      <AlertMessage isOpen={isOpen} onClose={() => setIsOpen(false)}>
+        Secret Message
+        <br />
+        Click To Close
+      </AlertMessage>
+    </div>
+  );
+}
+
+function AlertMessage({ children, onClose, isOpen }) {
+  if (!isOpen) return null;
+
+  return createPortal(
+    <div
+      onClick={onClose}
+      style={{
+        cursor: "pointer",
+        position: "absolute",
+        top: ".5rem",
+        left: "50%",
+        translate: "-50%",
+        background: "#777",
+        color: "white",
+        borderRadius: ".5rem",
+        padding: ".5rem",
+      }}
+    >
+      {children}
+    </div>,
+    document.querySelector("#alert-messages")
+  );
+}
+```
+
+#### Note: Question to CodeGPT about "bubbling up"
+
+"In this context, "bubble up" refers to the event propagation mechanism in HTML. When an event, such as a click, occurs on an element within the DOM, it is handled by that specific element's event listener.
+
+However, if the event listener is not present on that element, the event will "bubble up" the DOM tree, triggering event listeners on ancestor elements. Eventually, it reaches the <html> element.
+
+In the given context, it explains how the event bubbling is handled differently in React. Normally, in JavaScript, when an event occurs inside an element, it bubbles up through the DOM tree. But when using React's createPortal, the event does not bubble up beyond the target component. This behavior is different from the traditional event bubbling mechanism in HTML."
+
+## Forwarding Refs
+
+How to pass a `ref` to a custom component
+
+If you are trying pass a `ref` to a custom component, need to wrap entire component in a `forwardRef()`.
+
+For example, the code below works that way it is supposed to. We pass our `ref={inputRef}` in input
+
+```jsx
+import { useRef } from "react";
+
+export default function App() {
+  const inputRef = useRef();
+
+  function handleSubmit(e) {
+    e.preventDefault();
+    console.log(inputRef.current.value);
+  }
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <input ref={inputRef} style={{ border: "2px solid green" }} />
+      <button type="submit">Submit</button>
+    </form>
+  );
+}
+```
+
+But the code breaks if we try to **create a custom component**. Say we create a `CustomInput` and try to pass the `ref={inputRef}`
+
+```jsx
+export default function App() {
+  const inputRef = useRef();
+
+  function handleSubmit(e) {
+    e.preventDefault();
+    console.log(inputRef.current.value);
+  }
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <CustomInput ref={inputRef} />
+
+      <button type="submit">Submit</button>
+    </form>
+  );
+}
+
+function CustomInput(props) {
+  return <input {...props} style={{ border: "2px solid green" }} />;
+}
+```
+
+It looks like it should work, but **errors**. Saying many things, inclusing **can't pass ref to this component**.
+
+- If you are trying pass a `ref` to a custom component, need to wrap entire component in a `forwardRef()`.
+- Tells React that you are trying to pass a `ref` to this component, make sure it can accept it
+
+There are 2 steps
+
+1.  Need to wrap the custom component (like custom `input` component in `forwardRef`)
+
+    - Usually make a new component, give it any name, then export your custom component name, which is your new component wrapped in `forwardRef`
+
+2.  The wrapped componet receives a 2nd argument (after `props`) that receives `ref`
+
+    - The in custom input, `ref={ref}`
+
+NOTE: ALWAYS PUT `ref` AFTER `props` in arguments
+
+`App.jsx`
+
+```jsx
+export default function App() {
+  const inputRef = useRef();
+
+  function handleSubmit(e) {
+    e.preventDefault();
+    console.log(inputRef.current.value);
+  }
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <CustomInput ref={inputRef} />
+      <button type="submit">Submit</button>
+    </form>
+  );
+}
+```
+
+`CustomInput.jsx`
+
+```jsx
+// 1. Import forwardRef
+import { forwardRef } from "react";
+
+// 3. Receive 2nd argument of ref
+function InnerComponent(props, ref) {
+  // 4. in input, ref={ref}
+  return <input {...props} ref={ref} style={{ border: "2px solid green" }} />;
+}
+
+// 2. export custom component (which is above function wrapped in forwardRef)
+export const CustomInput = forwardRef(InnerComponent);
+```
+
+AGAIN: ALWAYS PUT `ref` AFTER `props` in arguments
+
+## Modal Project
+
+- More experience working with portals.
+- A hard thing about React is implimenting libraries, APIs, etc, not made to work with React
+- smaller project than others
+
+#### "What is a modal in this context" - CodeGpt
+
+"A modal is a UI component or element that is displayed on of the main content or page. It is used to present important information, require user input, or display notifications in a way that temporarily interrupts the user's interaction with the rest of the application.
+
+Modal windows typically have a focused and centered design, appear as floating dialogs, and often have a dimmed or blurred overlay behind them to highlight the modal and prevent interaction with the underlying content.
+
+Modal windows are commonly used for actions such as confirming or cancelling an action, displaying additional details or options, or gathering user input through forms or prompts."
+
+In project will make `modal` in 2 ways
+
+- 1. made with `div` to "look like" modal
+- 2.  Made with newish `dialog` element
+
+#### Custom modal
+
+There are a lot of ways to make this work.
+
+1. Logic for showing modal. Pass `isOpen` do `<div className={`modal-overlay ${isOpen && "show"}`}>`
+
+- therefore, if `isOpen`, will add `class` of "show"
+
+2.  Pass onClose logic for button
+
+- `onClose={() => setIsCustomModalOpen(false)}`
+
+3.  Set button `onClick={onClose}` in `CustomModal`
+
+4.  Create somewhere in basic html for portal to show
+
+- In `index.html` put `<div id="modal-container" ></div>`
+
+5.  createPortal
+
+- in CustomModal, wrap return in `createPortal` with following argument of destination (`#modal-container`)
+
+`styles.css`
+
+```css
+.modal {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  translate: -50% -50%;
+  padding: 1rem;
+  background: white;
+  border: 1px solid black;
+  z-index: 1;
+}
+
+.modal-overlay.show {
+  display: block;
+}
+
+.modal-overlay {
+  display: none;
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.1);
+}
+```
+
+`App.jsx`
+
+```jsx
+export default function App() {
+  const [isCustomModalOpen, setIsCustomModalOpen] = useState(false);
+
+  return (
+    <div>
+      <button onClick={() => setIsCustomModalOpen(true)}>
+        Show Custom Modal
+      </button>
+      <br />
+      <button onClick={() => setIsDialogModalOpen(true)}>
+        Show Dialog Modal
+      </button>
+      <CustomModal
+        {/* 1. pass isOpen */}
+        isOpen={isCustomModalOpen}
+        {/* 2. pass onClose with logic */}
+        onClose={() => setIsCustomModalOpen(false)}
+      />
+    </div>
+  );
+}
+```
+
+`CustomModal.jsx`
+
+```jsx
+import { useEffect } from "react";
+import { createPortal } from "react-dom";
+
+// 1. receive isOpen
+// 2. receive onCllose
+export function CustomModal({ isOpen, onClose, children }) {
+  useEffect(() => {
+    function handler(e) {
+      if (e.key === "Escape") onClose();
+    }
+
+    document.addEventListener("keydown", handler);
+
+    return () => {
+      document.removeEventListener("keydown", handler);
+    };
+  }, [onClose]);
+
+  // wrap in createPortal
+  return createPortal(
+    {/* 1. add "show" if isOpen*/}
+    <div className={`modal-overlay ${isOpen && "show"}`}>
+      <div className="modal">
+        <p>
+          This is a <strong>CUSTOM</strong> modal
+        </p>
+        {/* add `onClick` to button */}
+        <button onClick={onClose}>Close</button>
+      </div>
+    </div>,
+    {/* 5. - add destination*/}
+    document.querySelector("#modal-container")
+  );
+}
+```
+
+We are getting errors from ES Lint of no prop-types.
+
+- can disable in `.eslintrc.cjs` with...
+
+`.eslintrc.cjs`
+
+```jsx
+  rules: {
+    "react/prop-types": "off",
+  },
+```
+
+Pass `onClose` for logic of closing button
+
+```jsx
+export function CustomModal({ isOpen, onClose }) {
+  return createPortal(
+    <div className={`modal-overlay ${isOpen && "show"}`}>
+      <div className="modal">{children}</div>
+    </div>,
+    document.querySelector("#modal-container")
+  );
+}
+```
+
+A NOTE on why we use createPortal...
+
+- In our code, the `css` determines what the render will look like.
+- BUT, say our `App` `div` had a style...
+
+`<div style={{ position: "relative", marginTop: "20px"}}`
+
+- If we did't wrap our `CustomModal` return in a `createPortal`, and it was trying to render in the `App` `div`, then the `div` style would totally mess up the modal - it would override the `css`
+- SO, we use `createPortal` to render the `CustomModal` somewhere safe and neutral (like our `<div id="modal-container>` in `index.html`)
+
+Now we need `Escape` key to close...
+
+1.  Hook up `useEffect` in `CustomModal`
+2.  ADD event listener
+3.  REMOVE event listener for cleanup
+4.  Create `function handler()` to ...
+
+- take in event (e)
+- call `onClose()` function (to close modal) when `e.key === "Escape"`
+
+5.  Pass `handler` to event listener
+6.  Add `[onClose]` to dependency list so run whenever onClose changes, AND everytime rerun, event listener removed and new one started
+
+`CustomModal`
+
+```jsx
+export default function CustomModal({ children, isCustomOpen, onClose }) {
+  // 1. Hook up useEffect for event listener
+  useEffect(() => {
+    // 4. create handler function
+    function handler(e) {
+      if (e.key === "Escape") onClose();
+    }
+
+    // 2. Add event listener
+    // 5. Pass handler to event listener
+    document.addEventListener("keydown", handler);
+
+    return () => {
+      // 3. Remove event listener (in `return`) for cleanup
+      // 5. Pass handler to event listener
+      document.removeEventListener("keydown", handler);
+    };
+  }, [onClose]);
+
+  return createPortal(
+
+    // .....
+}
+```
+
+Now we pass `{children}` to make content dynamic
+
+- passes content from `App`
+
+1.  Receive `children` in `CustomModal` as prop
+2.  In `CustomModal` use `{children}` in `createPortal` to receive content
+3.  In `App` put content to pass as children
+4.  Make it so `button` `onClick` just calls `setIsCustomOpen` function to close
+
+`CustomModal`
+
+```jsx
+// 1. Receive children as prop
+export default function CustomModal({ children, isCustomOpen, onClose }) {
+  useEffect(() => {
+    function handler(e) {
+      if (e.key === "Escape") onClose();
+    }
+
+    document.addEventListener("keydown", handler);
+
+    return () => {
+      document.removeEventListener("keydown", handler);
+    };
+  }, [onClose]);
+
+  return createPortal(
+    <div className={`modal-overlay ${isCustomOpen ? "show" : ""}`}>
+      {/* 2. add {children} */}
+      <div className="modal">{children}</div>
+    </div>,
+    document.querySelector("#modal-container")
+  );
+}
+```
+
+`App.jsx`
+
+```jsx
+export default function App() {
+  const [isCustomModalOpen, setIsCustomModalOpen] = useState(false);
+
+  return (
+    <div>
+      <button onClick={() => setIsCustomModalOpen(true)}>
+        Show Custom Modal
+      </button>
+      <br />
+      <button onClick={() => setIsDialogModalOpen(true)}>
+        Show Dialog Modal
+      </button>
+      <CustomModal
+        isOpen={isCustomModalOpen}
+        onClose={() => setIsCustomModalOpen(false)}
+      >
+        {/* 3. Add content to pass as children*/}
+        <p>
+          This is a <strong>CUSTOM</strong> modal
+        </p>
+        {/* 4. make onClick just call set function to close */}
+        <button onClick={() => setIsCustomModalOpen(false)}>Close</button>
+      </CustomModal>
+    </div>
+  );
+}
+```
+
+#### Dialog modal
+
+1.  Add `useState` for `Dialog Modal`
+2.  Add button to call Show Dialog Modal
+3.  Add `DialogModal` just like `CustomModal`
+
+```jsx
+export default function App() {
+  const [isCustomModalOpen, setIsCustomModalOpen] = useState(false);
+  // 1. Create useState for dialog
+  const [isDialogModalOpen, setIsDialogModalOpen] = useState(false);
+
+  return (
+    <div>
+      <button onClick={() => setIsCustomModalOpen(true)}>
+        Show Custom Modal
+      </button>
+      <br />
+      {/* 2. Create button to call Show Dialog Modal */}
+      <button onClick={() => setIsDialogModalOpen(true)}>
+        Show Dialog Modal
+      </button>
+      <CustomModal
+        isOpen={isCustomModalOpen}
+        onClose={() => setIsCustomModalOpen(false)}
+      >
+        <p>
+          This is a <strong>CUSTOM</strong> modal
+        </p>
+        <button onClick={() => setIsCustomModalOpen(false)}>Close</button>
+      </CustomModal>
+
+      {/* 3. Add `DialogModal` just like CustomModal */}
+      <DialogModal
+        isOpen={isDialogModalOpen}
+        onClose={() => setIsDialogModalOpen(false)}
+      >
+        <p>
+          This is a <strong>DIALOG</strong> modal
+        </p>
+        <button onClick={() => setIsDialogModalOpen(false)}>Close</button>
+      </DialogModal>
+    </div>
+  );
+}
+```
+
+1. Create `DialogModal.jsx`
+2. Pass our props
+3. Create `<dialog>` in `return` and receive children
+4. Do our createPortal
+5. Add argument to pass to out "#modal-container" in `index.html`
+
+`DialogModal`
+
+```jsx
+// 1 & 2 - create and pass props
+export function DialogModal({ isOpen, onClose, children }) {
+
+//  4. createPortal
+  return createPortal(
+    {/* 3. Create dialof element and receive children*/}
+    <dialog ref={dialogRef}>{children}</dialog>,
+    {/* 5. add argument to pass to modal-container div*/}
+    document.querySelector("#modal-container")
+  )
+}
+```
+
+Now to make `dialog` work, we DO NOT just add a class attribute like "show"
+
+- we need to somehow call `.showModal` or `.close()`
+- `dialog` element is turned on and off this way
+- THIS IS NOT A REACT WAY OF DOING THINGS - IT IS MORE IMPERATIVE TO CALL CODE
+
+So...
+
+1.  Create `useEffect` that runs whenever `isOpen` changes
+2.  If isOpen is true, then `showModal`, if not, `close`
+
+- Taking state variable (`isOpen`) and hooking up to state of dialog element
+
+3.  We need a `ref` to state of `dialog` - create `useRef` and add to `dialog`
+4.  set to `null` by default - means it's unchangable / immutable
+5.  Set a variable `dialog` to the current state of out ref
+
+- MY NOTE: by setting it to null, we can safely check if current is null without accidentaly changing it
+
+6. If dialog is `null`, then `return` so we don't do anything yet
+
+`DialogModal`
+
+```jsx
+import { useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
+
+export function DialogModal({ isOpen, onClose, children }) {
+  // 3. create ref dor dialof state
+  // 4. set to null
+  const dialogRef = useRef(null);
+
+  // 1. Create useEffect that runs whenever `isOpen` changes
+  useEffect(() => {
+    // 5. Set a variable `dialog` to the current state of out ref
+    const dialog = dialogRef.current;
+
+    // 6. If dialog is null, return so we don't do anything yet
+    if (dialog == null) return;
+
+    // 2. if isOpen is true, then showModal, if not, close
+    if (isOpen) {
+      dialog.showModal();
+    } else {
+      dialog.close();
+    }
+  }, [isOpen]);
+
+  //....
+
+  return createPortal(
+    {/* 3. add ref for dialog state*/}
+    <dialog ref={dialogRef}>{children}</dialog>,
+    document.querySelector("#modal-container")
+  );
+}
+```
+
+Now, `dialog` element (for modals) will close automatically on `Escape`. But this is not what React expects, so we need to sync up what it expects with what js does by default.
+
+- As it is, if we hit Escape it closes, but can't reopen bc `isOpen` is still true!!!
+- To do this takes ANOTHER `useEffect`
+
+With next `useEffect`, we just want to check WHEN DIALOG CLOSES. So when it closes, it CALLS onClose METHOD!! `onClose` will reset `isOpen` to false
+
+So event listener is running, listening for a close. when it sees a close, it calls `onClose` function, which sets `isOpen` to false
+
+- when this happens, it runs the `useEffect` again to cleanup and make another event listener
+
+1.  Add second useEffect
+2.  set const dialog to current state of dialog element
+3.  Check if null (then don't do anything)
+4.  CREATE event listener THAT LISTENS FOR A `close`. If so, runs `onClose`
+5.  Set cleanup to remove event listener
+
+`DialogModal`
+
+```jsx
+export function DialogModal({ isOpen, onClose, children }) {
+  const dialogRef = useRef(null);
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    if (dialog == null) return;
+
+    if (isOpen) {
+      dialog.showModal();
+    } else {
+      dialog.close();
+    }
+  }, [isOpen]);
+
+  // 1
+  useEffect(() => {
+    // 2
+    const dialog = dialogRef.current;
+    // 3
+    if (dialog == null) return;
+
+    // 4
+    dialog.addEventListener("close", onClose);
+
+    // 5
+    return () => {
+      dialog.removeEventListener("close", onClose);
+    };
+  }, [onClose]);
+
+  return createPortal(
+    <dialog ref={dialogRef}>{children}</dialog>,
+    document.querySelector("#modal-container")
+  );
+}
+```
+
+NOTE on DIALOG element
+
+- the code for this is more confusing and longer
+- this is because it is not built with React in mind
+- it is not built in DECLARITIVE way - it is built in more IMPERRATIVE way
+- some libraries will be difficult like this bc not built for React
+
+  - RECOMMENDATION: wrap in a componment or custom hook to hide ugly logic
+
+- otherwise the custom and dialog modals are identical
+
+## Error Boundries
+
+There will always be errors that happen at some point - these can get pushed up to production.
+
+- Deal with by setting up error boundries
+- If you have a error ANYWHERE in your rReact code that has to do with rendering page, whole app will just be a white screen because nothing happens
+
+- say you have `App` & `Child` below
+- say we make `Child throw an error`
+
+`App`
+
+```jsx
+import Child from "./Child";
+
+export default function App() {
+  return (
+    <>
+      <h1>Parent</h1>
+      <Child />
+    </>
+  );
+}
+```
+
+`Child`
+
+```jsx
+export default function Child() {
+  throw new Error("Component");
+
+  return <h2>Child</h2>;
+}
+```
+
+- This crashes our React code. All of the help in console says do Error Boundries
+
+Error Boundries...
+
+1.  Error Boundry is just a component
+2.  It MUST BE A CLASS COMPONENT (the only thing in React you must do as a class component)
+3.  ErrorBounary class component can be called whatever you want
+4.  WRAP ENTIRE APPLICATION in ErrorBoundry
+5.  Give ErrorBoundary a `fallback` that is can actually render
+
+    - Can be a component or just some jsx
+    - Here is is `fallback={<h1>Error</h1>}`
+
+6.  In ErrorBoundray class need static method to `static getDerivedStateFromError(error)`
+
+    - the method receives `error`
+    - sets `{hasError: true}`
+    - (my note... codegpt) "In React class components, static methods are associated with the class itself rather than an instance of the class. They can be called directly on the class without needing to create an instance of the component."
+    - (my note... codegpt) "It's important to note that getDerivedStateFromError is a static method and does not have access to this or the component instance. It is intended to be used purely for updating the state based on an error and should not perform any side effects or change other component behavior."
+
+7.  Now if there is an error, it calls ErrorBoundary (b/c `<App/>` is wrapped in the class component)
+
+    - then methos in ErroryBoundary changes `hasError: true`
+    - Now does the `fallback` that was passed (like a prop)
+
+`ErrorBoundary`
+
+```jsx
+import React from "react";
+
+export class ErrorBoundary extends React.Component {
+  state = { hasError: false };
+
+  static getDerivedStateFromError(error) {
+    return { hasError: true };
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return this.props.fallback;
+    }
+    return this.props.children;
+  }
+}
+```
+
+`main`
+
+```javascript
+ReactDOM.createRoot(document.getElementById("root")).render(
+  <React.StrictMode>
+    <ErrorBoundary fallback={<h1>Error</h1>}>
+      <App />
+    </ErrorBoundary>
+  </React.StrictMode>
+);
+```
+
+So, what happens is when there is an error in React, it starts going up tree looking at all parent levels until it finds an error boundry
+
+- so Child to App to main and finds error boundary
+- passes error to Error Boundry
+- runs `static getDerivedStateFromError(error)` method
+- sets `hasError: true`
+- renders the `fallback` "prop" INSTEAD OF RENDERING THE CHILDREN
+
+Now we can do this wherever we want
+
+- for example, we could have error boundary that just wraps child component
+
+```jsx
+export default function App() {
+  return (
+    <>
+      <h1>Parent</h1>
+      <ErrorBoundary fallback={<h1>Error in child</h1>}>
+        <Child />
+      </ErrorBoundary>
+    </>
+  );
+}
+```
+
+- here it DOES render `Parent` but then error in `Child` causes `fallback` to render "Error in child"
+- This is bc THIS Error Boundry is closer up tree than one in `main`
+
+Best Practices...
+
+- at LEAST wrap entire application in error boundry
+- then add error boundarys only in places in App you might actually want them
+- For example, in a shopping cart website, maybe wrap the shopping cart in an error boundry. So if someonetriesto open shopping cart and it fails, you just get one error for that
+
+Error Boundry class takes a second method, `componentDidCatch()`
+
+- used for logging errors. Can log to a service or db. Here we just console.log
+
+```jsx
+export class ErrorBoundary extends React.Component {
+  state = { hasError: false };
+
+  static getDerivedStateFromError(error) {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error) {
+    console.log("Error: ", error.message);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return this.props.fallback;
+    }
+    return this.props.children;
+  }
+}
+```
+
+This works great if catching error with way React renders, etc. Like if error is in a `useEffect` as follows, it will catch
+
+`Child`
+
+```jsx
+export default function Child() {
+  useEffect(() => {
+    throw new Error("Component");
+  });
+
+  return <h2>Child</h2>;
+}
+```
+
+BUT, there can be some errors Error Bounries don't catch
+
+1.  Error in promiise / async
+2.  error in setTimeout
+
+3.  Watch outfor async code / awaiting promise. The following doesn't catch error
+
+```jsx
+export default function Child() {
+  useEffect(() => {
+    fetch("/").then(() => {
+      throw new Error("Component");
+    });
+  });
+
+  return <h2>Child</h2>;
+}
+```
+
+- should use `.catch` to do something like this instead
+
+```jsx
+export default function Child() {
+  useEffect(() => {
+    fetch("/")
+      .then(() => {
+        throw new Error("Component");
+      })
+      .catch((e) => setError(e));
+  });
+
+  return <h2>Child</h2>;
+}
+```
+
+2.  Watch for things like `setTimeout` - this won't call error boundry
+
+```jsx
+export default function Child() {
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      throw new Error("Timeout");
+    }, 1000);
+
+    return () => {
+      clearTimeout(timeout);
+    };
+  }, []);
+
+  return <h2>Child</h2>;
+}
+```
+
+SUMMARY... Error Boundary's will ONLY CATCH errors that happen bc of the RENDERING STEPS IN REACT. If it's asynchronous or in an event listener, won't catch that (BC THOSE DON'T CAUSE APP TO COMPLETELY FAIL ND GO WHITE SCREEN)
+
+- if you want to handle those type that it won't catch, recommend that you have some way to check for and handle those error messages (like the `.catch` for example)
+
+## Advanced Key Uses
+
+Confusing topic is how React handles state preservations between rerender
+
+Take the following code that lets you switch between Cats and Dog, and EACH CALLS ITS OWN UNIQUE COUNTER
+
+`App`
+
+```jsx
+import { useState } from "react";
+import Counter from "./Counter";
+
+export default function App() {
+  const [changeDogs, setChangeDogs] = useState(false);
+
+  return (
+    <div>
+      {changeDogs ? (
+        <>
+          <span># of Dogs:</span>
+          <Counter />
+        </>
+      ) : (
+        <>
+          <span># of Cats:</span>
+          <Counter />
+        </>
+      )}
+      <br />
+      <button onClick={() => setChangeDogs((d) => !d)}>Switch</button>
+    </div>
+  );
+}
+```
+
+`Counter`
+
+```jsx
+import { useState } from "react";
+
+export default function Counter() {
+  const [count, setCount] = useState(0);
+
+  return (
+    <>
+      <button onClick={() => setCount((c) => c - 1)}>-</button>
+      {count}
+      <button onClick={() => setCount((c) => c + 1)}>+</button>
+    </>
+  );
+}
+```
+
+In this example, the render logic in `App` allows swithing between cats & dogs
+
+- BUT even though each has it's own unique `Counter`, the `Counter` state is being shared. WHY??
+
+Demonstrates HOW React knows which `Counter` is which
+
+- React determines which `Counter` state is associated by LOOKING AT WHERE IT IS IN THE TREE
+- Thats how React determines state. Not which `Counter` state it is, but WHERE it is in tree
+- Both `Counter`s look the same in the tree - both have a `<div>` parent, then `Counter` as next element. So to React, these are the same `Counter`
+
+Need a way to take care of this
+
+- One way is to have the DOM be different for each. Like if you changed the Dogs `<>` to `div` and Cats `<>` to a `section` each `Counter` would be correct. The Dog one would be `div` then `div` then `Counter` component. The cat one would be `div` then `section` then `Counter`.
+
+`App`
+
+```jsx
+//...
+  return
+    <div>
+      {changeDogs ? (
+        <div>
+          <span># of Dogs:</span>
+          <Counter />
+        </div>
+      ) : (
+        <section>
+          <span># of Cats:</span>
+          <Counter />
+        </section>
+      )}
+      <br />
+      <button onClick={() => setChangeDogs((d) => !d)}>Switch</button>
+    </div>
+  );
+}
+```
+
+(Note though that counter goes back to 0 when switch - need a diff way to keep state between renders)
+
+KEYS are the way to handle this
+
+- We know we can use keys determine which element of an array is corresponding to which element in the DOM
+- Can use keys to distinguish different elements if rendered in the same place
+
+`App`
+
+```jsx
+export default function App() {
+  const [changeDogs, setChangeDogs] = useState(false);
+
+  return (
+    <div>
+      {changeDogs ? (
+        <>
+          <span># of Dogs:</span>
+          <Counter key="dogs" />
+        </>
+      ) : (
+        <>
+          <span># of Cats:</span>
+          <Counter key="cats" />
+        </>
+      )}
+      <br />
+      <button onClick={() => setChangeDogs((d) => !d)}>Switch</button>
+    </div>
+  );
+}
+```
+
+Just by adding different keys to each `Counter`, when we Switch, the state changes to the other animals (note hat it resets to zero bc not ppersisting this anywhere, but this is just example)
+
+- So with the keys, React can now KEEP TRACK of which `Counter` is which
+
+Now let's change code for another way to use keys
+
+`App`
+
+```jsx
+export default function App() {
+  const [changeDogs, setChangeDogs] = useState(false);
+
+  return (
+    <div>
+      {changeDogs ? <span># of Dogs:</span> : <span># of Cats:</span>}
+      <br />
+      <input type="number" />
+      <br />
+      <button onClick={() => setChangeDogs((d) => !d)}>Switch</button>
+    </div>
+  );
+}
+```
+
+- when we enter number on nput, then hit "Switch", the number is being persisted
+- This makes sense. The position doesn't change, etc
+- WE CAN GIVE INPUT A KEY, DETERMINED CONDITIONALLY
+
+```jsx
+export default function App() {
+  const [changeDogs, setChangeDogs] = useState(false);
+
+  return (
+    <div>
+      {changeDogs ? <span># of Dogs:</span> : <span># of Cats:</span>}
+      <br />
+      <input type="number" key={changeDogs ? "dogs" : "cats"} />
+      <br />
+      <button onClick={() => setChangeDogs((d) => !d)}>Switch</button>
+    </div>
+  );
+}
+```
+
+- The value now switched with "Switch"
+- (It still goes back to empty on Switch back bc when switched back seesit as a brand new element
+- Again, we use this key here bc without it, since `input` is in the exact same place in tree, it can't differentiate on re-render.
+- Can use keys anywhere you want
+
+99% of time you won't need to do this. Only need when elements are showing up in exact same place in tree so need to differentiate them
+
+- if using keys this way, take second and think about if code is written in weird way
+
+## Capture Event Listeners
+
+Event listeners have two phases
+
+- capture
+- bubble
+
+When you set an event listener, the default is BUBBLE phase
+
+- capture event listeners run from outtermost to innermost
+
+  - capture runs first
+
+- with bubble phase, it runs from innermost elements up through tree to outermost
+
+  - bubble runs second
+
+So you can choose `bubble` or `capture` (bubble is default when set an event listener)
+
+When you set `onClick`, as in a button, that is an event listener set in bubble phase
+
+You can use `onClickCapture` to set in capture phase
+
+"BY DEFAULT, EVERY EVENT IS A BUBBLE EVENT"
+
+Any event can be a capture. Just add "Capture" at the end
+
+Example:
+
+----- CodeGPT says:
+""
+Capture and bubble are two different phases of event propagation in JavaScript.
+
+When an event is triggered on a DOM element, it doesn't only affect that specific element but also its parent elements. During the capture phase, the event is first triggered on the highest-level parent element and then propagated down to the target element, following the nesting structure of the DOM tree. After the capture phase, the event enters the target phase and then starts the bubble phase.
+
+Capture event listeners are event handlers that are executed during the capture phase. They are registered using the addEventListener method with the third parameter set to true:
+
+Javascript
+
+`element.addEventListener(eventType, eventHandler, true);`
+
+On the other hand, bubble event listeners are event handlers that are executed during the bubble phase. They are registered using the addEventListener method with the third parameter set to false (this is the default behavior if the parameter is not specified):
+
+Javascript
+
+`element.addEventListener(eventType, eventHandler, false);`
+
+In most cases, when registering event listeners, you would use the bubble phase because it allows you to handle events as they bubble up through the DOM tree. This way, you can handle events on various elements with a single event listener, which is more efficient than adding separate event listeners to each individual element.
+
+Here's a simple example to demonstrate event capturing and bubbling:
+
+```javascript
+<div id="outer">
+  <div id="inner">Click me</div>
+</div>
+```
+
+```javascript
+const outer = document.getElementById("outer");
+const inner = document.getElementById("inner");
+
+outer.addEventListener(
+  "click",
+  () => {
+    console.log("Capture phase - outer element");
+  },
+  true
+);
+
+inner.addEventListener("click", () => {
+  console.log("Bubble phase - inner element");
+});
+```
+
+In this example, if you click on the "inner" element, the console output will be:
+
+```javascript
+Capture phase - outer element
+Bubble phase - inner element
+```
+
+First, the capture event listener on the "outer" element is called, then the bubble event listener on the "inner" element is called.
+""
+
+----- END CODEGPT
+
+2 tricks before starting next section
+
+## Trick to cause 100 ms delay
+
+- Trick to cause 100 ms delay (to emulate slow component)
+
+```jsx
+const now = performance.now();
+while (now > performance.now() - 100) {
+  // Do nothing
+}
+```
+
+### Find button boundaries
+
+- `buttonRef.current.getBoundingClientRect()`
+- returns object of button boundaries
+
+## useMutationLogger() CUSTOM hook
+
+- logs to console EVERYTIME DOM HAS BEEN CHANGED
+- will show how many changes of Dom in each action
+
+```jsx
+import { useEffect } from "react";
+
+export default function useMutationLogger() {
+  useEffect(() => {
+    const observer = new MutationObserver(() => {
+      console.log("DOM Changed");
+    });
+
+    observer.observe(document.documentElement, {
+      childList: true,
+      characterData: true,
+      subtree: true,
+      attributes: true,
+    });
+
+    return () => {
+      observer.disconnect();
+    };
+  }, []);
+}
+```
+
+## useLayoutEffect Hook
+
+Works like `useEffect` but `useLayoutEffect` runs BEFORE DOM is painted to screen
+
+- `useEffect` runs after above and below code and jsx are run and DOM is painted to screen
+- `useLayoutEffect` runs inline between rendering component and showing it to user
+
+  - if a layout state has changed, runs other code and jsx again THEN paints to screen
+
+When to use `useLayoutEffect`
+
+- In the scenario where you need to look at value of things on screen and put other things on the screen based on those values
+
+  - ex measure 1 element, or move and element based on measurements of another element
+
+- Figure out by seeing if items are flashing on screen in wrong place before showing up in right place
+
+Look at below code...
+
+1.  when "Show" button is clicked, `isOpen` is set to true and button shows
+2.  when `isOpen` changes (`useEffect` array dependency) ...
+
+    - if `!isOpen` (or null) `setPopupTop(0)` (doing this so everytime click Show it shows same error as it very forst time)
+    - if `isOpen`, gets the `bottom` location using `buttonRef.current.getBoundingClientRect()` and sets popupTop to bottom + 25
+
+`App`
+
+```jsx
+import { useEffect, useRef, useState } from "react";
+import useMutationLogger from "./useMutationLogger";
+
+export default function App() {
+  const [isOpen, setIsOpen] = useState(false);
+  const [popupTop, setPopupTop] = useState(0);
+  const buttonRef = useRef(null);
+
+  useEffect(() => {
+    if (buttonRef.current == null || !isOpen) return setPopupTop(0);
+    console.log(buttonRef.current.getBoundingClientRect());
+    const { bottom } = buttonRef.current.getBoundingClientRect();
+    setPopupTop(bottom + 25);
+  }, [isOpen]);
+
+  return (
+    <>
+      <button ref={buttonRef} onClick={() => setIsOpen((o) => !o)}>
+        Show
+      </button>
+      {isOpen && (
+        <div
+          style={{
+            position: "absolute",
+            top: `${popupTop}px`,
+            border: "1px solid black",
+          }}
+        >
+          Tooltip
+        </div>
+      )}
+    </>
+  );
+}
+```
+
+NOW, notice that when click "Show" the "Tooltip" flashes very temporapily right over Show button and then moves itself down
+
+Does this because
+
+- by default `popupTop` is set to 0
+- so Tooltip `div` `style` top: is breifly set to 0px (so briefly shows Tooltip starting at top of 0px)
+- THEN, after rendering code, runs `useEffect` (where it is then told to put at Show `bottom` + 25)
+- then Tooltip moves down
+
+If you use the `performance.now()` code, it is slowed by 100 ms and you can see
+
+```jsx
+const now = performance.now();
+while (now > performance.now() - 100) {
+  // Do nothing
+}
+```
+
+If we use the `useMutationLogger` custom hook, we see that when we push Show, the DOM changes 2x bc of way `useEffect` works
+
+- when component first runs it runs all that code above and below `useEffect`, and renders jsx
+- THEN `useEffects` run - `useEffect`s are the LAST THING THAT RUNS AFTER EVERYTHING PAINTED TO SCREEN
+- THEN, runs all the above and below code again, and paints from jsx
+
+- 1st - render Tooltip, where it starts at 0px
+- 2nd - after useEffect where it renders at bottom +25px
+
+`useLayoutEffect` Works like `useEffect` but runs BEFORE DOM is painted to screen
+
+`App`
+
+```jsx
+// ...
+useLayoutEffect(() => {
+  if (buttonRef.current == null || !isOpen) return setPopupTop(0);
+  const { bottom } = buttonRef.current.getBoundingClientRect();
+  setPopupTop(bottom + 25);
+}, [isOpen]);
+//...
+```
+
+So the order of events for `useLayoutEffect`...
+
+1.  Runs code above and below, and jsx
+2.  HOLDS on changing DOM
+3.  runs `useLayoutEffect` - sees a state is changing
+4.  runs all code above and below and jsx again
+5.  NOW paints to screen (updates DOM)
+
+So if we use `useLayoutEffect` with previous code, as below
+
+- we note that the Tooltip no longer starts in the above position first
+- we see that our `useMutationLogger` shows DOM only changes once (not twice)
+
+`App`
+
+```jsx
+import { useLayoutEffect, useRef, useState } from "react";
+import useMutationLogger from "./useMutationLogger";
+
+export default function App() {
+  useMutationLogger();
+
+  const [isOpen, setIsOpen] = useState(false);
+  const [popupTop, setPopupTop] = useState(0);
+  const buttonRef = useRef(null);
+
+  useLayoutEffect(() => {
+    if (buttonRef.current == null || !isOpen) return setPopupTop(0);
+    const { bottom } = buttonRef.current.getBoundingClientRect();
+    setPopupTop(bottom + 25);
+  }, [isOpen]);
+
+  const now = performance.now();
+  while (now > performance.now() - 100) {
+    // Do nothing
+  }
+
+  return (
+    <>
+      <button ref={buttonRef} onClick={() => setIsOpen((o) => !o)}>
+        Show
+      </button>
+      {isOpen && (
+        <div
+          style={{
+            position: "absolute",
+            top: `${popupTop}px`,
+            border: "1px solid black",
+          }}
+        >
+          Tooltip
+        </div>
+      )}
+    </>
+  );
+}
+```
+
+Why have 2 alomst identical hooks? Why not just use `useLayoutEffect` all of the time
+
+- Because it is synchronous inline, so if it's slow or a lot of code, it will slow down application
+
+  - none of the code can render to screen until `useLayoutEffect` finishes
+  - so ONLY USE when need to
+  - use `useEffect` for every situation except one where `useLayoutEffct` is needed
+
+## `useDebugValue` Hook
+
+- `useDebugValue` is a React Hook that lets you add a label to a custom Hook in React DevTools
+- custom hooks don't have the value automaticaaly next to component in DevTools
+
+Take the following code
+
+`App`
+
+```jsx
+import { useState } from "react";
+import { useOnlineStatus } from "./useOnlineStatus";
+import { useLocalStorage } from "./useLocalStorage";
+
+export default function App() {
+  const isOnline = useOnlineStatus();
+  const [name, setName] = useLocalStorage("Name", "");
+  const [age, setAge] = useState(0);
+
+  return (
+    <>
+      <h3>{isOnline ? "Online" : "Offline"}</h3>
+      <input value={name} onChange={(e) => setName(e.target.value)} />
+      <br />
+      <br />
+      <input
+        value={age}
+        onChange={(e) => setAge(e.target.value)}
+        type="number"
+      />
+    </>
+  );
+}
+```
+
+`useLocalStorage`
+
+```javascript
+import { useState, useEffect } from "react";
+
+export function useLocalStorage(storageKey, initialValue) {
+  const [value, setValue] = useState(() => {
+    const tempGet = localStorage.getItem(storageKey);
+    // we need to see if a value for this key exists in localStorage
+    if (tempGet === null) {
+      // if not we need to decide if we are passing initialValue as function or variable
+      if (typeof initialValue === "function") {
+        return initialValue();
+      } else {
+        return initialValue;
+      }
+      // if it DOES exist, return that value as initial value
+      // change back to JSON object with JSON.parse()
+    } else {
+      return JSON.parse(tempGet);
+    }
+  });
+
+  // when value changes, we setItem( to localStorage)
+  useEffect(() => {
+    // see if key-value changes bc now undefined
+    if (value === undefined) {
+      localStorage.removeItem(storageKey);
+    } else {
+      localStorage.setItem(storageKey, JSON.stringify(value));
+    }
+  }, [storageKey, value]);
+
+  return [value, setValue];
+}
+```
+
+`useOnlineStatus`
+
+```javascript
+import { useEffect, useState } from "react";
+
+export function useOnlineStatus() {
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
+
+  useEffect(() => {
+    function handler() {
+      setIsOnline(navigator.onLine);
+    }
+
+    window.addEventListener("online", handler);
+    window.addEventListener("offline", handler);
+
+    return () => {
+      window.removeEventListener("online", handler);
+      window.removeEventListener("offline", handler);
+    };
+  }, []);
+
+  return isOnline;
+}
+```
+
+- CODEGPT Note: "The navigator.onLine property is a Boolean value that represents the online status of the user's device. It indicates whether the device is currently connected to the internet or not."
+
+To debug these components, we go to out DevTools React Components.
+
+- Click on App (only component)
+- we see our hooks `use...`
+
+  - OnlineStatus
+  - LocalStorage
+  - State
+
+- it is hard to read because no value next to `useOnlineStatus` or `useLocalStorage`
+- when change one of these, no value being logged out (unless you open dropdown)
+
+![DevTools Image](/assets/img/useDebugValue_before.png "useDebugValue_before")
+
+- `useDebugValue` allows you to easily see a value next to component in Dev Tools
+
+To use, just open your hook, and add `useDebugValue()` and pass any value you want
+
+- this is what will show up next to component
+
+Example:
+
+`useOnlineStatus`
+
+```javascript
+export function useOnlineStatus() {
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
+
+  // add useDebugValue
+  useDebugValue(isOnline);
+
+//...
+```
+
+![DevTools Image](/assets/img/useDebugValue_after.png "useDebugValue_after")
+
+Can call multiple times, like in `useLocalStorage` below
+
+`useLocalStorage`
+
+```javascript
+  });
+
+  // call multiple useDebugValue
+  useDebugValue(storageKey);
+  useDebugValue(value);
+
+  // when value changes, we setItem( to localStorage)
+  useEffect(() => {
+
+```
+
+![DevTools Image](/assets/img/useDebugValue_multiple.png "useDebugValue_multiple")
+
+You can pass as an array, and it shows in DevTools as Array
+
+```javascript
+// call multiple useDebugValue
+useDebugValue([value, storageKey]);
+```
+
+![DevTools Image](/assets/img/useDebugValue_array.png "useDebugValue_array")
+
+You can pass as an object, and it shows in DevTools as object
+
+```javascript
+// call multiple useDebugValue
+useDebugValue({ storageKey, value });
+```
+
+![DevTools Image](/assets/img/useDebugValue_object.png "useDebugValue_object")
+
+One caveat to `useDebugValue`
+
+- shouldn't use too often because increases overhead in production
+- most useful for...
+
+  - debugging complex hooks
+  - creating library with complex debugging
+  - usually remove before production
+
+If you want to leave in, can USE THE FUNCTION VERSION
+
+- with function version, it only runs if dev tools is open and has to log something to it
+
+`useLocalStorage`
+
+```javascript
+//...  In component
+// call as function
+// pass function as second parameter, automatically calls with value
+useDebugValue(value, getValue);
+
+///... Outside component
+function getValue(value) {
+  return `Computed: ${value}`;
+}
+```
+
+![DevTools Image](/assets/img/useDebugValue_function.png "useDebugValue_function")
+
+Rules...
+
+1.  Can only use inside of custom hooks
+2.  Can call `useDebugValue` multiple times in a row and returns as if array
+3.  Can call `useDebugValue` with values in an array and returns an array
+4.  Can call `useDebugValue` with values in an object and returns an object
+5.  Shouldn't use too often bc of overhead in production
+6.  use FUNCTION VERSION if leaving in production - only runs if DEV Tools open
+
+## `useId` hook
+
+- Easy to understand
+- Makes sure "id" (ex, in input or label) are unique
+- `useId` gives a unique id to each instance
+- it doesn't take parameters, and returns 1 thing (id)
+- in React, you cant use same "id" in multiple areas in same component
+- in HTML should never have same id in more than 1 element
+- use any time you need to hook up different html elements with unique identifiers (like `htmlFor` or `aria-`)
+- DO NOT USE to generate unige keys etc - only for id / htmlFor / aria-
+
+  - causes problems - ex, click on one to type and it selects the other
+
+Take code below
+
+`App`
+
+```jsx
+import EmailForm from "./EmailForm";
+
+export default function App() {
+  return (
+    <>
+      <EmailForm />
+      <p>lots of text</p>
+      <EmailForm />
+    </>
+  );
+}
+```
+
+`EmailForm`
+
+```jsx
+import { useState } from "react";
+
+export default function EmailForm() {
+  const [email, setEmail] = useState("");
+
+  return (
+    <div>
+      <label htmlFor="email">Email</label>
+      <input
+        type="email"
+        id="email"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+      />
+    </div>
+  );
+}
+```
+
+![without useId](/assets/img/useId_before.png "useId_before")
+
+The `label` and `input` with `id="email"` are used twice
+
+PROBLEM: can't reuse on same page
+
+- when we do this we can see there is a problem. When click on bottom label, goes to top input
+- in React, bad practice to hardcode id's like this
+- can't solve with using `Math.random()` bc if you do, everytime you re-render the ids are regenerated
+- also, React can render on client and server. If render on server and send down to client, everything has to hook up and be the same.
+
+  - if use the `Math.random()` (instead of `useId()`) then will get one id on server and diff one on client
+
+- `useId` gives a unique id to each instance
+- it doesn't take parameters
+
+`EmailForm`
+
+```jsx
+export default function EmailForm() {
+  const [email, setEmail] = useState("");
+
+  //   add useId()
+  const id = useId();
+
+  return (
+    <div>
+      <label htmlFor={id}>Email</label>
+      <input
+        type="email"
+        // set id={id}
+        id={id}
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+      />
+    </div>
+  );
+}
+```
+
+When we set `const id = useId()` and then in form set `id={id}` and we inspect, we see a different id for each instance on page (here it's r1 & r3)
+
+- if we refresh page, we get SAME IDs
+
+![with useId](/assets/img/useId_after.png "useId_after")
+
+Now say we have multiple inputs (email AND name)
+
+- don't call `useId()` twice
+- instead, call `id` as a literal with a modifier... Ex:
+
+      ```jsx
+      id = {`${id}-email`}
+      ```
+
+  Full code...
+
+`EmailForm`
+
+```jsx
+export default function EmailForm() {
+  const [email, setEmail] = useState("");
+
+  const id = useId();
+
+  return (
+    <div>
+      <label htmlFor={`${id}-email`}>Email</label>
+      <input
+        type="email"
+        // id with sufix
+        id={`${id}-email`}
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+      />
+      <br />
+
+      <label htmlFor={`${id}-name`}>Name</label>
+      <input
+        type="text"
+        // id with suffix
+        id={`${id}-name`}
+      />
+    </div>
+  );
+}
+```
+
+Output
+
+![with useId](/assets/img/useId_suffix.png "useId_suffix")
+
+Here we can see that
+
+- for first Email & Name (top one), the ids are ":r1:-email" & ":r1:-name"
+- for the second (bottom) Email & Name, the ids are ":r3:-email" & ":r3:-name"
+
+## `useImperitiveHandle` Hook
+
+(Recall using `forwardRef()` to Child components)
+
+`useImperitiveHandle` let's us change what the ref is actually pointing to
+
+- by default when you use `forwardRef()`, you can only set the ref to some kind of Component (ex, input component etc)
+- `useImperitiveHandle` if you want ref to be something else
+- should not be using very often - it changes you from a declarative way of programming to a more imperative way of programming
+- to use, you pass it
+
+  - ref (that was passed to Child component, THAT YOU WANT TO OVERWRITE)
+  - function (that returns what NEW ref is going to be)
+  - dependancy array (if leave it off, runs everytime page renders)
+
+```jsx
+useImperativeHandle(ref, () => {}, []);
+```
+
+`CODEGPT`
+
+```
+"`useImperativeHandle` is a React Hook that allows you to customize the instance value that is exposed to parent components when using `ref`.
+
+  - By default, when you create a `ref` in a child component and use it in a parent component, the parent component can directly access the child component's instance. However, sometimes you may want to limit or customize the exposed functionality."
+```
+
+Below is example of just `forwardRef()`
+
+- in it, the parent component (`App`) can directly access the child components (`Input`) ref
+
+`App`
+
+```jsx
+import { useRef } from "react";
+import { Input } from "./Input";
+
+export default function App() {
+  const inputRef = useRef();
+
+  return (
+    <>
+      <button onClick={() => inputRef.current.focus()}>Focus</button>
+      <Input ref={inputRef} />
+    </>
+  );
+}
+```
+
+`Input`
+
+```jsx
+import { forwardRef } from "react";
+
+function Inner(props, ref) {
+  return <input {...props} ref={ref} />;
+}
+
+export const Input = forwardRef(Inner);
+```
+
+Use cases...
+
+1.  can make passed ref do something completely different
+
+- below, we use it so ref points to alert hi fxn
+- in `App` we change onClick to call `inputRef.current.alertHi()`
+- so ref doesn't even point to `input` element
+- we have changed what it does
+
+`App`
+
+```jsx
+import { useRef } from "react";
+import { Input } from "./Input";
+
+export default function App() {
+  const inputRef = useRef();
+
+  return (
+    <>
+      // onClick calls inputRef.current.alertHi()
+      <button onClick={() => inputRef.current.alertHi()}>Focus</button>
+      <Input ref={inputRef} />
+    </>
+```
+
+`Input`
+
+```jsx
+import { forwardRef, useImperativeHandle } from "react";
+
+function Inner(props, ref) {
+  useImperativeHandle(ref, () => {
+    // return object with function named alertHi
+    return { alertHi: () => alert("Hi") };
+  });
+
+  // removed ref={ref}
+  return <input {...props} />;
+}
+
+export const Input = forwardRef(Inner);
+```
+
+2.  Use it so that you aren't exposing all of the methods of your `input` ref... can make so only expose `.focus()` etc
+
+- in Child, create a ref - brand new ref / entirely seperate from Parents inputRef
+- set in `input` (note, `input` ref is `inputRef=...` (not `ref=`))
+- in `useImperitivehandle`, we return an object that defines a fxn `focus`, and it returns `inputRef.current.focus()`
+
+  - so the inputRef in Parent component, can use ONLY the `focus` function defined
+
+  -NOTE: in parent, trying to access other methods (like `inputRef.current.value()`) doesn't work
+
+`App`
+
+```jsx
+import { useRef } from "react";
+import { Input } from "./Input";
+
+export default function App() {
+  const inputRef = useRef();
+
+  return (
+    <>
+      // the inputRef in Parent component, can use ONLY the `focus` function
+      defined
+      <button onClick={() => inputRef.current.focus()}>Focus</button>
+      <Input ref={inputRef} />
+    </>
+  );
+}
+```
+
+`Input`
+
+```jsx
+import { forwardRef, useImperativeHandle, useRef } from "react";
+
+function Inner(props, ref) {
+  // create a ref (IN CHILD) - brand new ref / entirely
+  // seperate from Parents inputRef
+  const inputRef = useRef();
+
+  useImperativeHandle(ref, () => {
+    // return object with function named alertHi
+    return { focus: () => inputRef.current.focus() };
+  });
+
+  // changed ref={ref} to ref={inputRef}
+  // so input ref (that refers to whole input) in inputRef
+  // BUT parent will only have access to inputRef.current.focus()
+  return <input {...props} ref={inputRef} />;
+}
+
+export const Input = forwardRef(Inner);
+```
+
+3.  If you have 2 input (or more) elements in Child, can setup so parent inputRef can put focus on either.
+
+- set up 2 inputRef (inputRef & inputRef2) in child, one on each input element
+- use `useImperativeHandle` to assign BOTH to ref returned
+
+`App`
+
+```jsx
+import { useRef } from "react";
+import { Input } from "./Input";
+
+export default function App() {
+  const inputRef = useRef();
+
+  return (
+    <>
+      <button
+        // onClick references input2.focus()
+        onClick={() => inputRef.current.input2.focus()}
+      >
+        Focus
+      </button>
+      <Input ref={inputRef} />
+    </>
+  );
+}
+```
+
+`Input`
+
+```jsx
+import { forwardRef, useImperativeHandle, useRef } from "react";
+
+function Inner(props, ref) {
+  // define inputRef and inputRef2 for 2 inputs below
+  const inputRef = useRef();
+  const inputRef2 = useRef();
+
+  useImperativeHandle(ref, () => {
+    // when ref is shared with App (via forwardRef) it has an object with input1 and input 2
+    return { input1: inputRef.current, input2: inputRef2.current };
+  });
+
+  return (
+    <>
+      <br />
+
+      <input
+        {...props}
+        // uses inputRef
+        ref={inputRef}
+      />
+      <br />
+      <input
+        {...props}
+        //  uses inputRef2
+        ref={inputRef2}
+      />
+    </>
+  );
+}
+
+export const Input = forwardRef(Inner);
+```
+
+4.  Remember to use DEPENDENCY ARRAY if needed (as shown below)
+
+`Input`
+
+```jsx
+import { forwardRef, useImperativeHandle, useState } from "react";
+
+function Inner(props, ref) {
+  const [value, setValue] = useState("");
+
+  useImperativeHandle(
+    ref,
+    () => {
+      return { value };
+    },
+    // use dependency array to rerun each time value changes
+    [value]
+  );
+
+  return (
+    <>
+      <input
+        type="text"
+        value={value}
+        onChange={(e) => setValue(e.target.value)}
+      />
+    </>
+  );
+}
+
+export const Input = forwardRef(Inner);
+```
+
+## `useCallback` as ref (different way to use `useCallback`)
+
+Anytime you want to do something ONCE AN ELEMENT SHOWS UP on page, then use `useCallback` AS `useRef`
+
+- We use `useCallback` INSTEAD OF `useRef`!
+- If we use `useCallback` (instead of `useRef` + `useEffect`), it will only run when the element that your ref refers to shows up on page
+- Pretty common to do - most common use is when you only want to do something once an element is rendered to screen
+
+Note: - when we do this, we can't do anything with inputRef.current... don't get access to features (there is a way around by making second inputRef) - #2 below
+
+1. Explaination
+
+```jsx
+const inputRef = useCallback(() => {});
+```
+
+- some things can't be done with `useEffect()` - code breaks if it is doing something with inputRef, but inputRef doesn't exist yet on page (see below)
+
+  - there is not a way with `useEffect()` to have it only called if inputRef exists on page
+  - we CAN do with `useCallback()`
+
+example
+
+```jsx
+import { useCallback, useState } from "react";
+
+export default function App() {
+  const [showInput, setShowInput] = useState(false);
+  const inputRef = useCallback((input) => {
+    if (input == null) return;
+    input.focus();
+  }, []);
+
+  return (
+    <>
+      <button onClick={() => setShowInput((s) => !s)}>Toggle</button>
+      {showInput && <input type="text" ref={inputRef} />}
+    </>
+  );
+}
+```
+
+READ BELOW FOR EXPLAINATION...
+
+Below code works well
+
+```jsx
+import { useEffect, useRef } from "react";
+
+export default function App() {
+  const inputRef = useRef(null);
+
+  useEffect(() => {
+    inputRef.current.focus();
+  }, []);
+
+  return (
+    <>
+      <input type="text" ref={inputRef} />
+    </>
+  );
+}
+```
+
+BUT CODE BELOW doesn't work - bc inputRef.current DOESN'T EXIST YET on page
+
+```jsx
+import { useEffect, useRef, useState } from "react";
+
+export default function App() {
+  const [showInput, setShowInput] = useState(false);
+  const inputRef = useRef(null);
+
+  useEffect(() => {
+    inputRef.current.focus();
+  }, []);
+
+  return (
+    <>
+      <button onClick={() => setShowInput((s) => !s)}>Toggle</button>
+      {showInput && <input type="text" ref={inputRef} />}
+    </>
+  );
+}
+```
+
+SOLVE THIS by setting `inputRef = useCallback(() => {}, [])` (instead of using `useRef` and `useEffect`)
+
+```jsx
+import { useCallback, useState } from "react";
+
+export default function App() {
+  const [showInput, setShowInput] = useState(false);
+
+  // useCallback will run when inputRef shows on page
+  const inputRef = useCallback((input) => {
+    if (input == null) return;
+    input.focus();
+  }, []);
+
+  return (
+    <>
+      <button onClick={() => setShowInput((s) => !s)}>Toggle</button>
+      {showInput && <input type="text" ref={inputRef} />}
+    </>
+  );
+}
+```
+
+2. - Explaination
+
+As mentioned, there IS a way to access your `.current`, or `.current.value`
+
+- the answer is to use `useCallback` as above so it only runs the code for ... `.focus` when `input` element is on screen
+- BUT make a real `useRef` also (by diff name) and set it equal to `value` of `useCallback` which is inputRef
+- this is done AT TOP of `useCallback` code before anything else is done
+
+```jsx
+import { useCallback, useRef, useState } from "react";
+
+export default function App() {
+  const [showInput, setShowInput] = useState(false);
+
+  // create a different ref set to useRef
+  const actualInputRef = useRef();
+
+  const inputRef = useCallback((input) => {
+    // update new ref to be equal to input value of useCallback
+    actualInputRef.current = input;
+
+    // set focus to input value of useCallback, which is out inputRef
+    if (input == null) return;
+    input.focus();
+  }, []);
+
+  console.log(actualInputRef.current);
+
+  return (
+    <>
+      <button onClick={() => setShowInput((s) => !s)}>Toggle</button>
+      {showInput && <input type="text" ref={inputRef} />}
+    </>
+  );
+}
+```
+
+## `parseLinkHeader()` (Kyle wrote for project)
+
+```jsx
+/*
+  This function takes in fetch request's `res.headers.get('Link')` value and converts it to an object with each link type as a key and the url as the value. The only value that we care about for this project is the `next` link, which we will use to fetch the next page of data (if it exists).
+*/
+export function parseLinkHeader(linkHeader) {
+  if (!linkHeader) return {};
+  const links = linkHeader.split(",");
+  const parsedLinks = {};
+  links.forEach((link) => {
+    const url = link.match(/<(.*)>/)[1];
+    const rel = link.match(/rel="(.*)"/)[1];
+    parsedLinks[rel] = url;
+  });
+  return parsedLinks;
+}
+```
+
+## `IntersectionObserver` (from Kyles Blog article)
+
+- monitors if an element is in viewport or not
+
+**for an element to change its intersection status it must scroll in/out of the current viewport**
+
+**We are checking the isIntersecting property. This property is true if the element is on the page and it is false if the element is not on the page**
+
+Intersection Observer is one of 3 observer based JavaScript APIs with the other
+two being Resize Observer and Mutation Observer. Intersection Observer in my opinion
+is the most useful because of how easy it makes things like infinite scrolling,
+lazing loading images, and scroll based animations. In this article I will cover
+all the basics of Intersection Observer as well as the more complex nuances so you
+can start using Intersection Observer to spice up your sites.
+
+Your First Intersection Observer
+Creating an Intersection Observer is actually quite simple since all you need to do is pass a function to the IntersectionObserver constructor.
+
+```jsx
+const observer = new IntersectionObserver((entries) => {
+  console.log(entries);
+});
+```
+
+In the above example we created a brand new Intersection Observer
+
+- in the function we passed to it we are just logging out the entries parameter. This entries parameter is the only argument that the function accepts
+- it just outputs the information related to each element that changes its intersection status. That may sound confusing but let’s take a look at a simple example.
+
+```jsx
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach((entry) => {
+    const intersecting = entry.isIntersecting;
+    entry.target.style.backgroundColor = intersecting ? "blue" : "orange";
+  });
+});
+
+observer.observe(document.getElementById("test"));
+```
+
+In the above code...
+
+- we are calling the observe method on our Intersection Observer and telling it to observe intersection changes for the element with the id test.
+- for an element to change its intersection status it must scroll in/out of the current viewport.
+
+Below you will see an example that changes the color of our element every time the element intersects our container. In all the examples on this page the solid section with the border is our viewport. You can think of that as the visible portion of the screen. The greyed out sections outside the solid section are considered outside the viewport, but I made them visible to you so you can see what happens as our element intersects the viewport. Normally this area would not be visible.
+
+[See Animation in Blog](https://blog.webdevsimplified.com/2022-01/intersection-observer/)
+
+- As you can see above as soon as our element has 1 single pixel enter the viewport it changes to a blue color. Also, as soon as the entire element is back off the screen it changes back to orange. Now let’s break apart how this all works.
+
+In our code we are
+
+- looping through all the elements in the entries array. This array just lists all the elements we are observing that have had their intersection status change.
+- This means that the element has either entered or left the screen.
+- We are then looping through those entries and for each one we are checking the isIntersecting property. This property is true if the element is on the page and it is false if the element is not on the page.
+- Finally, we are using the target property of our entry to get the current element that is being observed and changing its background to the appropriate color.
+
+Intersection Observer Options
+
+Now the above code covers the most basic use case for the intersection observer, but on its own this isn’t too useful. The different options you can pass to your Intersection Observer when you create it really take this to the next level.
+
+1.  Threshold
+
+- Probably my favorite property is the threshold property. This accepts a value between 0 and 1 and represents the percentage of the element that must be visible before isIntersecting becomes true.
+- By default this is set to 0 which means as soon as any part of the element is visible it will be considered intersecting.
+
+```jsx
+const observer = new IntersectionObserver(changeColor, { threshold: 1 });
+
+observer.observe(document.getElementById("test"));
+```
+
+[See Animation in Blog](https://blog.webdevsimplified.com/2022-01/intersection-observer/)
+
+- In our above example we set our threshold to 1 which means 100% of the element must be visible before it will be considered intersecting so now our color only changes to blue when the entire element is in the viewport.
+- You can also pass an array to threshold which means that the Intersection Observer will fire each time your element passes one of the thresholds passed to it.
+
+```jsx
+const observer = new IntersectionObserver(
+  (entries) => {
+    entires.forEach((entry) => {
+      entry.target.innerText = `${Math.round(entry.intersectionRatio * 100)}%`;
+    });
+  },
+  { threshold: [0, 0.25, 0.5, 0.75, 1] }
+);
+
+observer.observe(document.getElementById("test"));
+```
+
+[See Animation in Blog](https://blog.webdevsimplified.com/2022-01/intersection-observer/)
+
+- In the above code you will notice the text in the square will change as you scroll it and it will only update once the square hits the thresholds we passed to our Intersection Observer.
+- In order to print this percent value we are getting the intersectionRatio property of our entry which is a number between 0 and 1 which represents the current percentage of the element that is within the viewport.
+
+- You will notice that the text in the box is not always exactly the same as our thresholds. This is because as we scroll we are sometimes scrolling past the exact percentage values so the intersectionRatio will be close to but not exactly the same as our threshold.
+- If you scroll slower the numbers will be more accurate while a fast scroll will have less accurate numbers since you are scrolling past more content before the observer can fire.
+
+2.  Root Margin (for infinate scrolling, lay loading, loading animations)
+
+- The next useful option you can pass to an Intersection Observer is rootMargin. - - This property is defined exactly the same as the margin CSS property in that it can take 1 value to apply margin to all sides or multiple values to give individual values to each side.
+- The rootMargin will be added to the container viewport so in essence we can shrink/grow our view port with this value.
+
+```jsx
+const observer = new IntersectionObserver(changeColor, { rootMargin: "50px" });
+
+observer.observe(document.getElementById("test"));
+```
+
+[See Animation in Blog]("https://blog.webdevsimplified.com/2022-01/intersection-observer/")
+
+- With a rootMargin of 50px our viewport is now considered to be 50px larger so once the element is 50px from being within the viewport it will be considered intersecting.
+- I added red lines to the above demo to represent where our rootMargin grows the viewport to. Using a positive rootMargin like this is really useful when you need to lazy load images, or do something like infinite scrolling since you can load in all the data before it becomes visible to the user.
+
+- You can also do negative margins to shrink the viewport.
+
+```jsx
+const observer = new IntersectionObserver(changeColor, { rootMargin: "-50px" });
+
+observer.observe(document.getElementById("test"));
+```
+
+[See Animation in Blog](https://blog.webdevsimplified.com/2022-01/intersection-observer/)
+
+- As you can see from the blue lines our new viewport is 50px smaller.
+- This type of rootMargin is perfect for doing things like loading animations that you want to occur after an element is at least a certain distance from the edge of the screen.
+
+3.  Root
+
+- The last option you can pass to an Intersection Observer is the root property which is a property you honestly probably won’t use much.
+- This property must be an element that is an ancestor of the elements being observed. This root element is then used as the viewport for intersection.
+- This is really only useful when you have a scrolling container inside your page that you want to check observations for since you can make the scrolling container the root element instead of the screen.
+
+- In order to make all the examples on this page work I actually had to use the root property to set the scrolling container as the root element since otherwise the observer would not work correctly. (bc inside blog article)
+
+Advanced Intersection Observer
+
+- This covers all the basic use cases and options for Intersection Observers, but there are a few additional things you should know.
+
+4.  Second Callback Parameter
+
+- The callback you pass to new Intersection Observers actually has two parameters. The first parameter is the entries parameter we have talked a bunch about. The second parameter is simply the observer that is observing the changes.
+
+```jsx
+const observer = new IntersectionObserver((entries, o) => {
+  console.log(o === observer);
+  // True
+});
+```
+
+-This parameter is useful when you need to do something with the observer from within the callback since you may not always have access to the observer variable from the callback depending on where the callback is defined.
+
+5.  Unobserve and Disconnect
+
+- It is important to stop observing elements when they no longer need to be observed, such as after they are removed from the page or after lazy loading an image in order to avoid memory leaks or performance issues.
+- This can be done with the unobserve method or the disconnect method which are both methods on the Intersection Observer.
+- The unobserve method takes a single element as its only parameter and it stops observing that single element.
+- The disconnect method takes no parameters and will stop observing all elements.
+
+```jsx
+new IntersectionObserver((entries, observer) => {
+  entries.forEach((entry) => {
+    if (entry.isIntersecting) {
+      lazyLoadImage(entry);
+      observer.unobserve(entry.target);
+    }
+  });
+});
+```
+
+Conclusion
+The Intersection Observer is my favorite of the different observer APIs since it has so many use cases from lazy loading images, to scroll based animations. It is also incredibly easy to use which is a huge bonus.
+
+If you want to learn more about the other observer based APIs you can check out my [Resize Observer Ultimate Guide](https://blog.webdevsimplified.com/2022-01/resize-observer/)

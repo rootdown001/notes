@@ -1312,3 +1312,257 @@ styles.css
 refer to [Basic Blog Project](https://github.com/rootdown001/React-Simplified-Beginner-Projects-main/tree/master/75-76-basic-blog-project/after)
 
 (Below are SELECT jsx pages with comments from Kyle's video)
+
+## React Router Actions (search and new)
+
+refer to [React Router Actions](https://github.com/rootdown001/solutions-router-actions)
+
+## Advanced Blog Project Walkthrough
+
+refer to [Basic Blog Project](https://github.com/rootdown001/React-Simplified-Beginner-Projects-main/tree/master/78-79-advanced-blog-project/after)
+
+## createPortal example / Secret button example
+
+refer to [Solutions - usePortal](https://github.com/rootdown001/solutions-createPortal)
+
+`index.html`
+
+```jsx
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Vite + React</title>
+</head>
+<body>
+  <div id="root"></div>
+
+  // add dedicated div for messages from portal
+  <div id="alert-messages"></div>
+
+  <script type="module" src="/src/main.jsx"></script>
+</body>
+</html>
+```
+
+`App.jsx`
+
+```jsx
+import React, { useState } from "react";
+import { createPortal } from "react-dom";
+
+export default function App() {
+  const [isOpen, setIsOpen] = useState(false);
+
+  return (
+    <div style={{ position: "relative", marginTop: "100px" }}>
+      <h1>App Content</h1>
+      <button onClick={() => setIsOpen(true)}>Show Message</button>
+      <AlertMessage isOpen={isOpen} onClose={() => setIsOpen(false)}>
+        Secret Message
+        <br />
+        Click To Close
+      </AlertMessage>
+    </div>
+  );
+}
+
+function AlertMessage({ children, onClose, isOpen }) {
+  if (!isOpen) return null;
+
+  return createPortal(
+    <div
+      onClick={onClose}
+      style={{
+        cursor: "pointer",
+        position: "absolute",
+        top: ".5rem",
+        left: "50%",
+        translate: "-50%",
+        background: "#777",
+        color: "white",
+        borderRadius: ".5rem",
+        padding: ".5rem",
+      }}
+    >
+      {children}
+    </div>,
+    document.querySelector("#alert-messages")
+  );
+}
+```
+
+## Modal Project Walkthrough
+
+refer to [Modal Walkthrough](https://github.com/rootdown001/React-Simplified-Advanced-Projects-main/tree/main/04-05-modal/after)
+
+## `useMutationLogger` custom hook
+
+writes to console "DOM Changed" everytime it changes
+
+`useMutationLogger.js`
+
+```javascript
+import { useEffect } from "react";
+
+export default function useMutationLogger() {
+  useEffect(() => {
+    const observer = new MutationObserver(() => {
+      console.log("DOM Changed");
+    });
+
+    observer.observe(document.documentElement, {
+      childList: true,
+      characterData: true,
+      subtree: true,
+      attributes: true,
+    });
+
+    return () => {
+      observer.disconnect();
+    };
+  }, []);
+}
+```
+
+## slow a component down (to see efects on screen)
+
+just put this in a component to slow it down by 100 ms
+
+```jsx
+const now = performance.now();
+while (now > performance.now() - 100) {
+  // Do nothing
+}
+```
+
+## `useOnlineStatus`
+
+Can watch Online / Offline change with toggling network
+
+```javascript
+import { useEffect, useState } from "react";
+
+export function useOnlineStatus() {
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
+
+  useEffect(() => {
+    function handler() {
+      setIsOnline(navigator.onLine);
+    }
+
+    window.addEventListener("online", handler);
+    window.addEventListener("offline", handler);
+
+    return () => {
+      window.removeEventListener("online", handler);
+      window.removeEventListener("offline", handler);
+    };
+  }, []);
+
+  return isOnline;
+}
+```
+
+## `parseLinkHeader()`
+
+```jsx
+/*
+  This function takes in fetch request's `res.headers.get('Link')` value and converts it to an object with each link type as a key and the url as the value. The only value that we care about for this project is the `next` link, which we will use to fetch the next page of data (if it exists).
+*/
+export function parseLinkHeader(linkHeader) {
+  if (!linkHeader) return {};
+  const links = linkHeader.split(",");
+  const parsedLinks = {};
+  links.forEach((link) => {
+    const url = link.match(/<(.*)>/)[1];
+    const rel = link.match(/rel="(.*)"/)[1];
+    parsedLinks[rel] = url;
+  });
+  return parsedLinks;
+}
+```
+
+## Infinite Scroll Project
+
+refer to [Infinate Scroll Project Walkthrough](https://github.com/rootdown001/React-Simplified-Advanced-Projects-main/tree/main/16-17-infinite-scroll/after)
+
+`App`
+
+```jsx
+import { useCallback, useEffect, useRef, useState } from "react";
+import "./styles.css";
+import { parseLinkHeader } from "./parseLinkHeader";
+
+const LIMIT = 50;
+
+export default function App() {
+  const [photos, setPhotos] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const nextPhotoUrlRef = useRef();
+
+  async function fetchPhotos(url, { overwrite = false } = {}) {
+    setIsLoading(true);
+    try {
+      await new Promise((res) => setTimeout(res, 2000));
+      const res = await fetch(url);
+      nextPhotoUrlRef.current = parseLinkHeader(res.headers.get("Link")).next;
+      const photos = await res.json();
+      if (overwrite) {
+        setPhotos(photos);
+      } else {
+        setPhotos((prevPhotos) => {
+          return [...prevPhotos, ...photos];
+        });
+      }
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  const imageRef = useCallback((image) => {
+    if (image == null || nextPhotoUrlRef.current == null) return;
+
+    const observer = new IntersectionObserver((entries) => {
+      if (entries[0].isIntersecting) {
+        fetchPhotos(nextPhotoUrlRef.current);
+        observer.unobserve(image);
+      }
+    });
+
+    observer.observe(image);
+  }, []);
+
+  useEffect(() => {
+    fetchPhotos(
+      `http://localhost:3000/photos-short-list?_page=1&_limit=${LIMIT}`,
+      {
+        overwrite: true,
+      }
+    );
+  }, []);
+
+  return (
+    <div className="grid">
+      {photos.map((photo, index) => (
+        <img
+          src={photo.url}
+          key={photo.id}
+          ref={index === photos.length - 1 ? imageRef : undefined}
+        />
+      ))}
+      {isLoading &&
+        Array.from({ length: LIMIT }, (_, index) => index).map((n) => {
+          return (
+            <div key={n} className="skeleton">
+              Loading...
+            </div>
+          );
+        })}
+    </div>
+  );
+}
+```
