@@ -1,0 +1,447 @@
+# Forms
+
+## Forms - Form Basics
+
+Creating forms inside of React
+
+- usually you WANT to use a form for accessibility
+
+Topics:
+
+1.  If your `<input>` is not in a form, then hitting `ENTER` will NOT submit form
+2.  Forms have really good accessibility features for screen readers
+3.  Default behavior for form is to REFRESH PAGE on enter or submit (this is because it expects it is sending to a server url)
+
+- We want to PREVENT default behavior
+
+  - REMOVE `onClick` from `<button>`
+  - ADD `onSubmit={...}` inside of form element
+  - In the function passed, ADD `e.preventDefault()`
+  - Example
+
+  ```jsx
+  function addNewTodo(e) {
+    e.preventDefault()
+    if (newTodoName) .......
+  }
+
+  <form onSubmit={addNewTodo} id="new-todo-form">
+  ....
+  ```
+
+4.  If you specify a `value={...}` and an `onChange={...}` then it is a **controlled input**
+
+- For **uncontrolled** can specify nothing, or `defaultValue={...}`
+
+5.  If working with checkboxes, use `checked={...}` and `onChange={...}`
+
+- For **uncontrolled** can specify nothing, or `defaultChecked`
+
+Inputs you can have inside of `<form>...</form>`
+
+1.  `<textarea>`
+
+- Work the same as an `<input>`. Can have
+  - `value="...."`
+  - `onChange={...}`
+  - `defaultValue="..."`
+
+2.  `<select>`
+
+- Inside of `<select>` you specify options (`<option value="1">1</option>`, etc)
+- Then in `<select>` you can specify `value="1"`
+- If you want to make it **uncontrolled**, can use `defaultValue`
+- Example...
+
+```jsx
+<select value="1" onChange={...}>
+  <option value="1">1</option>
+  <option value="2">2</option>
+  <option value="3">3</option>
+</select>
+```
+
+</br>
+
+## Forms - One Way Data Flow
+
+Data in Forms (& all of React) flows one way
+
+- Parent to child.......
+  - If you want to change state in a component, need to still do it with the setter
+  - To do this pass the function in props that can do this
+- True in all of React, but comes up a lot in forms b/c forms have so many inputs, etc, together
+- So ALL DATA FLOWS IN ONE DIRECTION - if you want to go the other direction, you need to trigger an event to let you interact with the state
+
+</br>
+
+## Forms - useState vs. useRef
+
+1.  If we are using `useState` and a **controlled input**, it will re-render everytime the input changes before hittin submit
+
+- Instead, can use `useRef` and **uncontrolled input**
+  - Leave `value` and `onChange` off of input
+  - ADD `ref={...}`
+- Again, THIS IS COMMON TO DO IN FORMS because we only need access to the value when something happens
+- Improves performance a little to use `useRef`
+- Example - `useRef` instead of `useState` (which is commented out)
+
+```jsx
+import { useRef, useState } from "react";
+
+function App() {
+  const nameRef = useRef();
+  // const [name, setName] = useState("");
+
+  function handleSubmit(e) {
+    e.preventDefault();
+    const name = nameRef.current.value;
+
+    if (name === "") return;
+
+    alert(`Name: ${name}`);
+  }
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <label htmlFor="name">Name</label>
+      <br />
+      <input id="name" ref={nameRef} />
+      // <input
+      //  type="text"
+      //  id="name"
+      //  value={name}
+      //  onChange={(e) => setName(e.target.value)}
+      // />
+      <br />
+      <br />
+      <button>Alert Name</button>
+    </form>
+  );
+}
+
+export default App;
+```
+
+2.  Choose whether to use `useState` oor `useRef`
+
+- If you need to use input AS CHANGES ARE MADE, `useState` is probably best to use
+- If you only need to use input after submit, `useRef` is probably best to use
+  </br>
+
+## Forms - Form Libraries
+
+Creating React Forms can be complicated. Most people use some sort of form library. There are some popular ones
+
+1.  React Hook Form
+
+- Most popular and updated a lot
+
+2.  Formik
+
+- Somewhat popular but hasn't be updated
+
+3.  React Final Form
+
+- Least popular and outdated
+
+### React Hook Form
+
+- He is using v7.43.2
+- Makes managing form easier
+- Installed with `npm install react-hook-form`
+
+1.  Library has react hook `useForm` that is used for 90% of cases
+
+    - returns an object with lots of information
+
+```jsx
+const {
+  register,
+  handleSubmit,
+  watch,
+  formState: { errors },
+} = useForm();
+```
+
+2.  `register` helps you set up all of the event listeners you need
+
+```jsx
+<input defaultValue="test" {...register("example")} />
+```
+
+- This gives us all of the events that we will need
+
+3.  `handleSubmit` is a function you call, and pass it another function, like `onSubmit`
+
+```jsx
+    <form onSubmit={handleSubmit(onSubmit)}>
+```
+
+- It takes the function (ex: `onSubmit`) and passes along all of the data from your form
+
+4.  Lets you do data validation from HTML validation. Ex...
+
+```jsx
+<input {...register("firstName", { required: true, maxLength: 20 })} />
+```
+
+5. Can integrate with external UI component libraries. Use `Controller` for this
+
+```jsx
+import { useForm, Controller } from "react-hook-form";
+```
+
+- The can wrap in `Controller` what you want to integrate
+- Example, can integrate controlled inputs
+
+```jsx
+return (
+  <form onSubmit={handleSubmit(onSubmit)}>
+    <Controller
+      name="checkbox"
+      control={control}
+      rules={{ required: true }}
+      render={({ field }) => <Checkbox {...field} />}
+    />
+  </form>
+);
+```
+
+6.  Has built in error handling
+
+```jsx
+    <input
+      {...register("mail", { required: "Email Address is required })}
+      aria-invalid={errors.mail ? "true" : "false" }
+    />
+```
+
+7.  Can do schema-based form validation
+
+- Using `Zod` is best
+  </br>
+
+## `react-hook-form`
+
+```jsx
+npm install react-hook-form
+```
+
+1.  Behind the scenes, `react-hook-form` uses a Ref to not re-render page more than it needs to. This is by default. So by default it is **uncontrolled** input
+2.  `<ReactSecect>` is used to show how you can use an external UI library. It gives the nice drop-down select ability
+3.  `FormGroup.jsx` component encapsulates some of the error logic
+
+- We pass along `errorMessage` as prop to `FormGroup` component
+
+4. we spread `{...register()}` method in input to be able to use the properties of `register`
+
+- pass to `register` the name of input field. Ex... `{...register("email")}`
+- this name is how we now use this instance of `register`
+
+5.  In `<form>` element we use `handleSubmit` feature of `react-hook-form`
+
+- `onSubmit={handleSubmit(onSubmit)}`
+- Here we are wrapping `onSubmit` (or any function in our code that we want) in `handleSubmit()` (feature of `react-hook-form`). This is the called by `<form>`'s `onSubmit=` function
+
+6.  If we get to our `function onSubmit(data)` function, that means we have already passed all error tests (when using `react-hook-form`)
+
+7.  The name you use in `register()` becomes the unique key of the `data` property
+
+- Same with `errors` etc from `react-hook-library` - unique key is the name used in `register()`
+
+8.  `register()` has many properties you can use like `required`, `validate`, etc
+
+9.  To refer to `errors` (which we loaded from `useForm`), we are looking at the unique key (like "email") to get the `message`
+
+- We are passing this to or `FormGroup` component with `errorMessage` prop
+
+10. With `useForm` we can set default values.
+
+- Ex... `useForm({defaultValues: { email: "Hi"}})`
+- Can also change validation mode, criteria mode, and reValidation mode
+
+11. When doing many validations after {...register} you pass as key :value
+
+- Ex...
+
+```jsx
+validate: {
+              hasLowerCase: (value) => {
+                if (!value.match(/[a-z]/)) {
+                  return "Must include at least 1 lowercase letter";
+                }
+              },
+              hasUpperCase: (value) => {
+                if (!value.match(/[A-Z]/)) {
+                  return "Must include at least 1 uppercase letter";
+                }
+              }
+```
+
+12. To use `<ReactSelect>`, need to change to **controlled** input. Need to add `control` from `useForm`.
+
+- a. Use `useController` hook to allow **controlled** input
+- b. Add `control` to `useForm` returned properties
+- c. For `useController`, define `field` (will be what is used in `<input>` instead of `register`)
+- d. For `useController`, define `name` (same as `id` from `<input>`)
+- e. Also, define rules in `useController`
+
+13. Can use `watch` property returned from `useForm` to get the most up to date live value of something
+
+- Ex...
+
+```jsx
+const {
+  register,
+  handleSubmit,
+  formState: { errors },
+  watch,
+} = useForm();
+
+const liveEmail = watch("email");
+```
+
+- not used in example below, but can use if wanted
+
+`App.jsx`
+
+```jsx
+import { FormGroup } from "./FormGroup";
+import ReactSelect from "react-select";
+import "./styles.css";
+import { useController, useForm } from "react-hook-form";
+
+const COUNTRY_OPTIONS = [
+  { label: "United States", value: "US" },
+  { label: "India", value: "IN" },
+  { label: "Mexico", value: "MX" },
+];
+
+function App() {
+  // useForm returning register, handleSubmit, errors
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    // control is added to be able to use useController for the drop down
+    control,
+  } = useForm();
+
+  // useController hook allows CONTROLLED input for the <ReactSelect> part. Define returned field key with a value (here "countryField" - this is how you call it)
+  // In useController, define name (same as id from <input>), and rules
+  const { field: countryField } = useController({
+    name: "country",
+    control,
+    rules: { required: { value: true, message: "Required" } },
+  });
+
+  //  If we get to our `function onSubmit(data)` function, that means we have already passed all error tests
+  // The name you use in `register()` becomes the unique key of the `data` property
+  function onSubmit(data) {
+    console.log(data);
+    alert("Success");
+  }
+
+  return (
+    {/*Here we are wrapping `onSubmit` (or any function in our code that we want) in `handleSubmit()` (feature of `react-hook-form`).  This is the called by `<form>`'s `onSubmit=` function*/}
+    <form onSubmit={handleSubmit(onSubmit)} className="form">
+      {/*Below we we are looking at the unique key (like "email") to get the `message`
+      - We are passing this to or `FormGroup` component with `errorMessage` prop - This is saying :if there are errors (part of useForm), then if there is email error, get message and pass as errorMessage prop*/}
+      <FormGroup errorMessage={errors?.email?.message}>
+        <label className="label" htmlFor="email">
+          Email
+        </label>
+        <input
+          className="input"
+          type="email"
+          id="email"
+          {/* we spread the properties of register method to be able to use options of the method*/}
+          {/* pass to `register` the name of input field. Ex... `{...register("email")}` - just by passing name, register is doing all the behind the scenes things on its own*/}
+
+          {...register("email", {
+
+          {/* if you want required to have a message, need to pass an object as below*/}
+
+            required: { value: true, message: "Required" },
+
+          {/*validate takes the value of input and performs the logic you want*/}
+
+          validate: (value) => {
+              if (!value.endsWith("@webdevsimplified.com")) {
+                return "Must end with @webdevsimplified.com";
+              }
+            },
+          })}
+        />
+      </FormGroup>
+      <FormGroup errorMessage={errors?.password?.message}>
+        <label className="label" htmlFor="password">
+          Password
+        </label>
+        <input
+          className="input"
+          type="password"
+          id="password"
+          {...register("password", {
+            required: { value: true, message: "Required" },
+            minLength: { value: 10, message: "Must be at least 10 characters" },
+            {/*with many validations like below, pass a key: value */}
+            validate: {
+              hasLowerCase: (value) => {
+                if (!value.match(/[a-z]/)) {
+                  return "Must include at least 1 lowercase letter";
+                }
+              },
+              hasUpperCase: (value) => {
+                if (!value.match(/[A-Z]/)) {
+                  return "Must include at least 1 uppercase letter";
+                }
+              },
+              hasNumber: (value) => {
+                if (!value.match(/[0-9]/)) {
+                  return "Must include at least 1 number";
+                }
+              },
+            },
+          })}
+        />
+      </FormGroup>
+      <FormGroup errorMessage={errors?.country?.message}>
+        <label className="label" htmlFor="country">
+          Country
+        </label>
+        {/*ReactSelect needs controlled input to work, so we use useCntroller hook above.*/}
+        <ReactSelect
+          isClearable
+          classNamePrefix="react-select"
+          id="country"
+          options={COUNTRY_OPTIONS}
+          {/*for controlled input, instead of using register, we use the "field" value returned by useController*/}
+          {...countryField}
+        />
+      </FormGroup>
+      <button className="btn" type="submit">
+        Submit
+      </button>
+    </form>
+  );
+}
+
+export default App;
+```
+
+`FormGroup.jsx`
+
+```jsx
+export function FormGroup({ errorMessage = "", children }) {
+  return (
+    <div className={`form-group ${errorMessage.length > 0 ? "error" : ""}`}>
+      {children}
+      {errorMessage.length > 0 && <div className="msg">{errorMessage}</div>}
+    </div>
+  );
+}
+```
+
+</br>

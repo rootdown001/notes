@@ -1,0 +1,565 @@
+# React Hooks
+
+### Rules for Hooks
+
+1. Hooks can never be called **conditionally** or in **any other block than the function**.
+
+- Why? Because React remembers hooks **by the order they were first called**
+- Example...
+
+```jsx
+function App() {
+  const [value, setValue] = useState("");
+
+  useEffect(() => {
+    document.title = value;
+  }, [value]);
+
+  return <>{Value}</>;
+}
+```
+
+- In example, React remembers 1st hook is `useState` `value`, 2nd hook is `useEffect`.
+- So you can't call in other blocks, `for` loops, `if` satements, etc. These could end up changing the number hooks rendered in the component.
+- This means you ALWAYS HAVE THE SAME NUMBER OF HOOKS RENDERED EVERYTIME YOU RENDER COMPONENT.
+- Hooks need to go at top of file in your function.
+  - If you had an `if` statement with a return above `useEffect` the `useEffect` might not get called each time. This would change the number of hooks rendered on component render
+- _Instead_ you can put `if` statements of `for` loops INSIDE of `useEffect`
+
+2. Hooks can only be used inside of a) function components
+   b) custom hooks
+
+</br>
+
+## useRef Hook
+
+1. `useRef` allows saving data between renders. Unlike `state` and `prop`, saving data in `useRef` does not call rerender
+
+- Assign a value, as in `useRef("Lance")`
+
+  - It takes a value or a function
+  - value gets saved in an object
+
+```jsx
+const nameRef = useRef("Lance");
+```
+
+- `useRef` is taking the value `"Lance"` and wrapping it in an object (`nameRef`)
+- the object (`nameRef`) has 1 property called `.current`
+
+- To save a new value, `nameRef.object = "Sally"`
+- Editing value **does not** cause re-render. `useRef` is tied to the component (but not the re-rendering).
+
+```jsx
+const nameRef = useRef("Lance");
+```
+
+- Can have the variable now of `nameRef` in different components, and each component can change `nameRef` to a different value than other components have
+  - We use `useRef` instead of a variable outside of function because that would be global to whole React app
+
+2. THERE IS A 2ND USE CASE OF `useRef`: can also be used to get a reference to an element in HTML
+
+```jsx
+const inputRef = useRef();
+```
+
+- Every element in HTML has a `ref` attribute
+- We can set, for example...
+
+```jsx
+<input ref={inputRef} value={name} onChange={(e) => setName(e.target.value)} />
+```
+
+- Now if we `console.log(inputRef.current)`  
+  we get a REFERENCE TO THE VALUE OF `input` ELEMENT
+- `inputRef` **is not available** until AFTER component renders
+  - This allows things like **putting focus** on an input value with cursor. Done in a `useEffect` because `useEffect` is run AFTER the initial rendering. That way we don't get an error (because the `inputRef` is not available until AFTER component renders)
+  - Example...
+
+```jsx
+useEffect(() => {
+  inputRef.current.focus();
+}, []);
+```
+
+- This will put cursor focus in `input` element afterit is first rendered
+
+- Full example...
+
+```jsx
+import { useState, useRef, useEffect } from "react";
+
+function App() {
+  const [name, setName] = useState("");
+  const inputRef = useRef();
+
+  useEffect(() => {
+    inputRef.current.focus();
+  }, []);
+
+  return (
+    <>
+      <label>
+        Name:
+        <input
+          ref={inputRef}
+          value={name}
+          onChange={(e) => setName({ name: e.target.value })}
+        />
+      </label>
+    </>
+  );
+}
+
+export default App;
+```
+
+</br>
+
+### Refs in Class Components
+
+1. Use refs in class components to reference an element in HTML. Setup in constructor with `React.createRef()`. Example...
+
+```jsx
+this.inputRef = React.createRef();
+```
+
+- can then use `inputRef` in your element. Ex..
+
+```jsx
+<input
+  ref={this.inputRef}
+  value={name}
+  onChange={(e) => setName(e.target.value)}
+/>
+```
+
+- Finally, you can use `componentDidMount()` to give cursor focus to input
+
+```jsx
+componentDidMount() {
+  this.inputRef.current.focus()
+}
+```
+
+- Full example...
+
+```jsx
+import React from "react";
+
+class App extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      name: "",
+    };
+    this.inputRef = React.createRef();
+  }
+
+  componentDidMount() {
+    this.inputRef.current.focus();
+  }
+
+  render() {
+    return (
+      <>
+        <label>
+          Name:
+          <input
+            ref={this.inputRef}
+            value={this.state.name}
+            onChange={(e) => this.setState({ name: e.target.value })}
+          />
+        </label>
+      </>
+    );
+  }
+}
+```
+
+2. Don't even need Refs to save value that doesn't cause re-render in class components
+
+- just put `this.value =` in the constructor
+- can then change this outside of constructor to save a different value to the `this` property
+
+</br>
+
+## `useMemo`
+
+1. Memorization for performance
+
+- Use when you have a piece of code that is slow to run, but you don't need it to run on every render
+- `useMemo` accepts a function, and a dependancy array (like `useEffect`)
+- `useMemo` works by checking to see if the dependancy has changed, and if so, it runs the function
+- If the dependency has not changed, it does not re-run the function
+- `useMemo` does NOT cache values like other memorization in coding.
+  - It ONLY stores the last value
+- Example...
+
+```jsx
+const filteredList = useMemo(() => {
+  return LIST.filter((n) => n.toString().includes(query));
+}, [query]);
+```
+
+- In example, `console.log(filteredList.length)` makes the call to `filteredList`. This equation takes a relatively long time
+- `useMemo` makes it so that the function only runs when there is a change from the last `query`.
+- Full example...
+
+```jsx
+import { useState, useMemo } from "react";
+
+const LIST = Array(1_000_000)
+  .fill()
+  .map((_, i) => i + 1);
+
+function App() {
+  const [query, setQuery] = useState("");
+  const [isDarkMode, setIsDarkMode] = useState(false);
+
+  const filteredList = useMemo(() => {
+    return LIST.filter((n) => n.toString().includes(query));
+  }, [query]);
+
+  console.log(filteredList.length);
+
+  return (
+    <div
+      style={{
+        backgroundColor: isDarkMode ? "#333" : "white",
+        color: isDarkMode ? "white" : "#333",
+      }}
+    >
+      <label>
+        Query:
+        <input value={query} onChange={(e) => setQuery(e.target.value)} />
+      </label>
+      <br />
+      <label>
+        <input
+          type="checkbox"
+          onChange={(e) => setIsDarkMode(e.target.checked)}
+          checked={isDarkMode}
+        />
+        Dark Mode
+      </label>
+    </div>
+  );
+}
+
+export default App;
+```
+
+## `useCallback`
+
+1. `useCallback` works like `useMemo` but for memorization of **FUNCTIONS**
+2. `useCallback` memorizes the function
+
+- `useMemo` memorizes the RETURN of `useMemo`
+
+3. Mostly used for if a **function is a dependency** for a `useEffect`, `useMemo`, or other hooks.
+
+- Because if a `useEffect` (or other hook) has a **function** as a dependency, it will always be run on re-render because functions are always re-created if put inside component
+- So if the function is always re-created in component (ie, reference to function), then the hook that has the function as a dependency will always re-run
+- Big difference between `useMemo` and `useCallback` is that...
+  - `useMemo` is for _performance_
+  - `useCallback` is for wrapping functions so they can be used in a dependancy array
+
+4. Note: Best to use `useCallback` to wrap function so function can be in `useEffect` INSTEAD OF referencing the values in the function in `useEffect` as an alternative to putting function in dependency array. This is because your functions can be stored somewhere else, or you may want to change function
+5. Example... we DON'T want to do this below because `printName` is recreated each time component is re-run, which means the `useEffect` will always be re-run
+
+```jsx
+function printName() {
+  console.log(`Name: $(name)`);
+}
+
+useEffect(() => {
+  console.log("in effect");
+  printName();
+}, [printName]);
+```
+
+- Instead we use `useCallback` as below...
+
+```jsx
+const printName = useCallback(() => {
+  console.log(`Name: $(name)`);
+}, [name]);
+
+useEffect(() => {
+  console.log("in effect");
+  printName();
+}, [printName]);
+```
+
+5. Full example...
+
+```jsx
+import { useState, useEffect, useCallback } from "react";
+
+function App() {
+  const [name, setName] = useState("");
+  const [age, setAge] = useState(0);
+
+  const printName = useCallback(() => {
+    console.log(`Name: $(name)`);
+  }, [name]);
+
+  useEffect(() => {
+    console.log("in effect");
+    printName();
+  }, [printName]);
+
+  return (
+    <>
+      <label>
+        Name:
+        <input value={name} onChange={(e) => setName(e.target.value)} />
+      </label>
+      <br />
+      <label>
+        Age:
+        <input
+          type="number"
+          value={age}
+          onChange={(e) => setAge(e.target.valueAsNumber)}
+        />
+      </label>
+    </>
+  );
+}
+
+export default App;
+```
+
+## Custom Hooks
+
+1. Function that contains other hooks inside of it to do your logic
+2. Use when you see logic you are reusing
+3. React knows it's a custom hook because it starts with `use`
+4. Include one or more hooks in custom hook
+5. Can return as an _array_ or an _object_
+6. Generally we include it in a NEW file as `.js` (because doesn't have jsx). Then we import like other hooks... `import { useToggle } from "./useToggle"`
+7. Anytime we put a `function` inside of a custom hook, it's a good idea to wrap function in a `useCallback`
+
+- That way if function is used in a `useEffect` etc, the user doesn't have to worry about doing that themselves
+
+8. Example... We use this toggle logic a lot...
+
+```jsx
+function App() {
+  const [name, setName] = useState("");
+  const [isDarkMode, setIsDarkMode] = useState(false);
+
+  // logic....
+
+  return (
+    <div>
+      {/* // jsx.... */}
+      <button onClick={() => setIsDarkMode((d) => !d)}>Toggle Dark Mode</button>
+      {/* // jsx.... */}
+    </div>
+  );
+}
+```
+
+- We can make custom hook as below
+
+```jsx
+function useToggle(initialValue) {
+  const [value, setValue] = useState(initialValue);
+
+  function toggle() {
+    setValue((currentValue) => !currentValue);
+  }
+
+  return [value, toggle];
+}
+```
+
+- we then set our `useToggle` as `const [isDarkMode, toggleDarkMode] = useToggle(false)`
+- In jsx, we just call `onClick={toggleDarkMode}` instead of other code
+
+9. Another example... we use this setName logic a lot
+
+```jsx
+function App() {
+  const [name, setName] = useState("");
+
+  // logic....
+
+  return (
+    <div>
+      {/* // jsx.... */}
+      <label>
+        Name:
+        <input name={value} onChange={(e) => setName(e.target.value)} />
+      </label>
+      {/* // jsx.... */}
+    </div>
+  );
+}
+```
+
+- We can make custom hook as below
+
+```jsx
+function useInputValue(initialValue) {
+  const [value, setValue] = useState(initialValue);
+
+  return {
+    value,
+    onChange: (e) => setValue(e.target.value),
+  };
+}
+```
+
+- Note that this returns an object. So now we can just spread in out `<input>` as <input {...nameInput} />
+
+9. Full example...
+
+```jsx
+import { useState } from "react";
+
+function App() {
+  const nameInput = useInputValue("");
+  // const [name, setName] = useState("");
+  const [isDarkMode, toggleDarkMode] = useToggle(false);
+  // const [isDarkMode, setIsDarkMode] = useState(false);
+
+  return (
+    <div
+      style={{
+        background: isDarkMode ? "#333" : "white",
+        color: isDarkMode ? "white" : "#333",
+      }}
+    >
+      <label>
+        Name:
+        {/* <input name={value} onChange={e => setName(e.target.value)} />*/}
+        <input {...nameInput} />
+      </label>
+      <br />
+      <br />
+      {/* <button onClick={() => setIsDarkMode((d) => !d)}>Toggle Dark Mode</button> */}
+      <button onClick={toggleDarkMode}>Toggle Dark Mode</button>
+    </div>
+  );
+}
+
+function useInputValue(initialValue) {
+  const [value, setValue] = useState(initialValue);
+
+  return {
+    value,
+    onChange: (e) => setValue(e.target.value),
+  };
+}
+
+function useToggle(initialValue) {
+  const [value, setValue] = useState(initialValue);
+
+  function toggle() {
+    setValue((currentValue) => !currentValue);
+  }
+
+  return [value, toggle];
+}
+
+export default App;
+```
+
+</br>
+
+# Local Storage in React
+
+From [[freeCodeCamp - "How to Use `localStorage` with React Hooks to Set and Get Items"](https://www.freecodecamp.org/news/how-to-use-localstorage-with-react-hooks-to-set-and-get-items/)]
+
+`localStorage` is a **web storage object** allowing JS sites & apps to keep key-value pairs in a web browser.
+
+- Data survives page refreshes and browser restarts
+- Enables developers to store and retrieve data in the browser
+- NOT to be used as a database
+- It includes 5 methods...
+
+1. `setItem()`: Add a key & value to `localStorage`
+
+- Can store value of any datatype (text, integer, object array...)
+- Must FIRST stringify data with `JSON.stringify()`
+- Example...
+
+```jsx
+const [items, setItems] = useState([]);
+
+useEffect(() => {
+  localStorage.setItem("items", JSON.stringify(items));
+}, [items]);
+```
+
+- This sets state (`items`) to localStorage by...
+  - names key 'items'
+  - assigns `items` value after stringifying it
+  - `[items]` array set as dependency to re-run `useEffect`
+
+2. `getItem()`: Get item from `localStorage` using key
+
+- When we stored data, it was converted to a JSON string. We have to parse it back to JSON (convert JSON string back to JSON object). This is done with `JSON.parse()`
+
+```jsx
+const [items, setItems] = useState([]);
+
+useEffect(() => {
+  const items = JSON.parse(localStorage.getItem("items"));
+  if (items) {
+    setItems(items);
+  }
+}, []);
+```
+
+- This gets JSON string from `localStorage` using key ('items')
+- It converts to JSON object with `JSON.parse(...)`
+- It runs `setItems` function from `useState` if returned value exists (ie, is in `localStorage`)
+- It only runs on first mount because of `[]`, empty dependency array
+
+3. `removeItem()`: Delete item from `localStorage` using key
+4. `clear()`: Delete all instances of `localStorage`
+5. `key()`: When you supply a number, it aids in retrieval of `localStorage` key
+
+Example from WebDev (create `useLocalStorage` that emulates `useState` and be able to pass value or function)
+
+```jsx
+import { useState, useEffect } from "react";
+
+export function useLocalStorage(storageKey, initialValue) {
+  const [value, setValue] = useState(() => {
+    const tempGet = localStorage.getItem(storageKey);
+    // we need to see if a value for this key exists in localStorage
+    if (tempGet === null) {
+      // if not we need to decide if we are passing initialValue as function or variable
+      if (typeof initialValue === "function") {
+        return initialValue();
+      } else {
+        return initialValue;
+      }
+      // if it DOES exist, return that value as initial value
+      // change back to JSON object with JSON.parse()
+    } else {
+      return JSON.parse(tempGet);
+    }
+  });
+
+  // when value changes, we setItem( to localStorage)
+  useEffect(() => {
+    // see if key-value changes bc now undefined
+    if (value === undefined) {
+      localStorage.removeItem(storageKey);
+    } else {
+      localStorage.setItem(storageKey, JSON.stringify(value));
+    }
+  }, [storageKey, value]);
+
+  return [value, setValue];
+}
+```
+
+</br>
