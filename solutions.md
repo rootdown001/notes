@@ -1465,6 +1465,10 @@ export function useOnlineStatus() {
 }
 ```
 
+## Date Picker
+
+refer to [Date Picker](https://github.com/WebDevSimplified/React-Simplified-Advanced-Projects/tree/main/09-10-date-picker/after)
+
 ## `parseLinkHeader()`
 
 ```jsx
