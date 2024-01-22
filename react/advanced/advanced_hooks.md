@@ -832,9 +832,7 @@ function Inner(props, ref) {
 export const Input = forwardRef(Inner);
 ```
 
-## `useCallback` as ref (different way to use
-
-`useCallback`)
+## `useCallback` as ref (different way to use `useCallback`)
 
 WITH THIS, KEEP IN MIND DIFFERENCE BETWEEN AN ELEMENT EXISTING AND TRIGGERING useCALLBACK VS BEING IN VIEWPORT
 

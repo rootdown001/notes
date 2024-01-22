@@ -286,4 +286,309 @@ Cons...
 
 - Some of the libraries pre-compile
 
-## Utility CSS
+## Utility-First CSS (Tailwind)
+
+Use these instructions to set up Tailwind in React project in Vite
+
+[Install Tailwind w/ Vite](https://tailwindcss.com/docs/guides/vite)
+... then in `main.jsx` do `import "./index.css"`
+
+- creates `tailwind.config.js`
+
+May different libraries - Tailwind is most popular
+
+Also install VS Code Tailwindcss extension for autocomplete
+
+To know...
+
+1.  By default, Tailwind removes MANY of the default styles the browser has.
+
+- When you load, will see default text change. This is because it is removing default browser styles to make everything set back to same starting place for browsers
+
+2.  Notice `<h1></h1>` is not big. Same size as `<h6></h6>`. Again, because tailwind is removing default styles by browser
+
+3.  Broken down into very small individual classes that do specific things
+
+- see Tailwind site...
+- just use search bar to find any classes you want
+- have a ton of classes for anything you want to do.
+
+4.  Has guardrails - keeps your styles congruent
+
+- Ex, if you choose `pl` for padding-left, you get a dropdown of different padding sizes. By using from dropdown (esp as numbers get bigger) you pick ones to be continuous (ex, has `pl-32` then `pl-36`). This way you don't end up with randome ones (like 33) that you try to match later
+- but can customize anything
+
+  - `pl-[35px]` - use brackets to customize
+
+5.  Utility-first, like Tailwind, helps make designs more cohesive.
+
+6.  Can do anything css can do
+
+- Ex for hover, `hover:text-red-500` (now will be red when hovered)
+
+7.  Can also write your own css in `index.css`
+
+8.  The bundle is not big, because it only includes the classes you are using
+
+- can see this by inspecting css in the head in elements. At top is all of the css that is OVERRIDING browser styles. At bottom is css from your code.
+
+9.  Makes easy to make it very componentized
+
+Con...
+
+- difficult to read html sometimes
+- can be difficult to override
+
+  - say you use props and bring in a className. Can be unpredictable. Can't just put 2 classes on something and expect the last one to override the first one
+
+`App`
+
+```jsx
+import Child from "./Child";
+
+export default function App() {
+  return (
+    <>
+      <h1 className=" text-red-500">App</h1>
+      <Child className="text-blue-500" />
+    </>
+  );
+}
+```
+
+`Child`
+
+```jsx
+export default function Child({ className }) {
+  return (
+    <>
+      <h1 className={`text-red-500 ${className}`}>Child</h1>
+    </>
+  );
+}
+```
+
+- in code above, where `className` prop is sent to `Child` and used in template literal, you can't necessarily expect that "Child" will be blue (which you would expect bc the template literal is 2nd)
+
+  - can't put 2 classes on something (like 2 text colors in `Child`) and expect it to be the last one. Does this bc of "css and specificity"
+
+Kyle likes Tailwind bc tons of classes to use, but with guardrails
+
+## CSS Frameworks
+
+Full-fledged framework - Bootstrap is a popular one
+
+Install by following instructions...
+
+[Bootstrap Installation](https://react-bootstrap.netlify.app/docs/getting-started/introduction)
+
+- installs bootstrap & react-bootstrap
+
+  - `npm install react-bootstrap bootstrap`
+
+- then import bootstrap css we need (in `main.jsx`, for example)
+
+```jsx
+{
+  /* The following line can be included in your src/index.js or App.js file */
+}
+import "bootstrap/dist/css/bootstrap.min.css";
+```
+
+As soon as we do this, can see fonts change (from browser default fonts to bootstrap default)
+
+Bootstrap works by IMPORTING COMPONENTS
+
+- predefined components
+
+```jsx
+import Button from "react-bootstrap/Button";
+
+export default function App() {
+  return (
+    <>
+      <h1>App</h1>
+      <Button>Button</Button>
+    </>
+  );
+}
+```
+
+- this gives bootstrap Button on screen
+- can change the props to `Button` component
+
+  - here we add `varient` prop of "danger" to make button danger red
+
+```jsx
+import Button from "react-bootstrap/Button";
+
+export default function App() {
+  return (
+    <>
+      <h1>App</h1>
+      <Button variant="danger">Button</Button>
+    </>
+  );
+}
+```
+
+In Bootsrap docs, entire section on Components
+
+- [Components](https://react-bootstrap.netlify.app/docs/components/accordion)
+
+  - shows everything you can do with Component
+
+Bootstrap framework gives us fully set up components
+
+Pros...
+
+- good if don't like writing much css
+- can make design less of an issue
+
+Cons...
+
+- looks like generic Bootstrap (not unique)
+- difficult to customize to look different
+
+Other libraries can give components that you style more yourself
+
+- ex: [HeadlessUI](https://headlessui.com/) (built by Tailwind folks)
+- Everything is unstyled, and you style
+- But get all the components with js done
+
+## Comparison of all
+
+Kyle re-wrote our Posts project 4 diff ways with vanilla, utility (Tailwind), css in js, framework (Bootstrap)
+
+[css 5 diff ways code](https://github.com/WebDevSimplified/React-Simplified-Advanced-Projects/tree/main/23-css-alternative-examples)
+
+Doesn't matter what you use, can all get basically same result
+
+1.  Vanilla CSS
+
+- tons of different classNames
+
+2.  Modules
+
+- with modules, it is typical to put css module in folder with module jsx
+- ex, in `components/Card` we see
+
+  - `Card.jsx`
+  - `Card.module.css`
+
+- ended up with more components in modules css bc instead of vanilla with all the calss names, was easier to make a few more modules
+
+  - still has `styles.css` but only has a few selectors
+
+    - `*`, `body`, and few styles for handling utilty css like `.mb-4`, `.mb-2`
+
+  - when you look at files (`jsx`) can see there is little to no css in them (just a few utility styles)
+  - components handle everything
+
+3.  CSS in JS,
+
+- All of the js in css elements he made start with "Styled...", ex, body is `StyledBody`
+
+- still has `styles.css` but only has a few selectors
+
+  - `*`, `body`, and few styles for handling utilty css like `.mb-4`, `.mb-2`
+
+- jsx looks different bc not seeing `<div></div>` etc, just StyledElements
+- don't really see classNames anywhere - all defined outside of component
+- some use the `props` variables in the css in js
+
+4.  Utility (Tailwind)
+
+- slight differences in color & font bc only used built in values
+- `styles.css`
+
+  - has more css than other ways bc some things in Tailwind are hard to do (like spinner) so he put that in `styles.css`
+  - used `@apply` to use some Tailwind in `styles.css` (but they don't recommend)
+
+`styles.css` (segment example)
+
+```css
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.form-group textarea {
+  @apply p-2 rounded-lg border-2 border-slate-900;
+}
+```
+
+- has a few styles in `index.html`
+
+  - fine to do and pretty normal
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vite + React</title>
+  </head>
+  <!-- see styles in body below -->
+  <body class="bg-slate-100 text-2xl">
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>
+```
+
+In components there are a lot of utility classNames setting the style
+
+- as they get more complicated, get really big with utility classnames
+
+```jsx
+export function PageHeader({ children, btnSection, subtitle }) {
+  return (
+    <>
+      <h1
+        className={`text-5xl flex justify-between items-center gap-8 font-bold ${
+          subtitle ? "mb-4" : "mb-8"
+        }`}
+      >
+        {children}
+        {btnSection && <div className="text-2xl font-normal">{btnSection}</div>}
+      </h1>
+      {subtitle && <div className="mb-8 text-3xl">{subtitle}</div>}
+    </>
+  );
+}
+```
+
+Can manage it getting too big by breaking out some into className ternery
+
+- below, `colorClasses` is a ternery, and then IT is added as className in Component
+
+example
+
+```js
+export function Button({
+  className,
+  outline = false,
+  AsComponent = "button",
+  ...props
+}) {
+  const colorClasses = outline
+    ? "border-2 border-sky-800 text-sky-800 hover:bg-sky-100 focus:bg-sky-100 disabled:bg-slate-200 disabled:text-slate-500 disabled:border-slate-500"
+    : "bg-sky-800 text-slate-100 hover:bg-sky-700 focus:bg-sky-700 disabled:bg-slate-500";
+
+  return (
+    <AsComponent
+      className={`no-underline px-4 py-3 rounded-lg cursor-pointer disabled:cursor-not-allowed ${colorClasses} ${className}`}
+      {...props}
+    />
+  );
+}
+```
+
+5.  Framework (Bootstrap)
+
+- Looks somewhat different bc using default bootstrap
+- removed a lot of custom code bc Bootstrap has its own
+- `styles.css` has some custom css bc some things you just can't do in bootstrap (like spinner css)
+- can see in pages, LOTS of compoonent imports from Bootstrap (they have component for anything you can think of)

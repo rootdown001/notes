@@ -80,3 +80,126 @@
     - npm i
     - npm run dev
 3.  Gives a server at http://127.0.0.1:3000 to use to run fake API
+
+## gitignore
+
+Standard gitignore created by vite
+
+```
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+```
+
+## pnpm
+
+installed pnpm to be able to use @t3-oss
+
+did `npm install -g pnpm`
+
+now can use @t3-oss to set @ as a directive
+
+## Tailwind
+
+Use these instructions to set up Tailwind in React project in Vite
+
+[Install Tailwind w/ Vite](https://tailwindcss.com/docs/guides/vite)
+
+- in `main.jsx` do `import "./index.css"`
+
+- creates `tailwind.config.js`
+
+To make @tailwind error in index.css resolve, edit VS Code `settings.json`
+
+- Add
+
+```
+{
+  "files.associations": {
+    "*.css": "tailwindcss"
+  }
+}
+```
+
+## @ directive for paths
+
+first install `path`
+
+`npm install path`
+
+in `vite.config.ts` import `path`, and add alias
+
+```
+import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react-swc";
+import path from "path";
+
+// https://vitejs.dev/config/
+export default defineConfig({
+  plugins: [react()],
+  resolve: {
+    alias: {
+      "@": path.resolve(__dirname, "./src"),
+      "@backend": path.resolve(__dirname, "../api/src"),
+    },
+  },
+});
+```
+
+Then in `tsconfig.js`, add following code under // Linting
+
+```
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"],
+      "@backend/*": ["../api/src/*"]
+    }
+```
+
+Now can use @ as directive to "./src"
+
+## create site from GitHub temple
+
+- `gh` was added with `brew install gh`
+
+- In VSCODE terminal, cd to where you want project to be
+
+- In github, choose `templete site`, use as template
+
+- Give it name of what you want project called
+
+- then under `Code`, copy `gh` code from GitHub CLI
+
+- In VSCODE terminal, paste code
+
+- Site is created from template
+
+## update Node & npm
+
+I have `nvm` installed
+
+For latest Node version, run - `nvm install node`
+
+For latest `npm` run `nvm install --latest-npm`
