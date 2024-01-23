@@ -203,3 +203,18 @@ I have `nvm` installed
 For latest Node version, run - `nvm install node`
 
 For latest `npm` run `nvm install --latest-npm`
+
+## Next.js
+
+[Next.js Installation](https://nextjs.org/docs/getting-started/installation)
+
+Create project - `npx create-next-app@latest`
+
+Fix issue with wrong node
+
+`npm i next@13 react@latest react-dom@latest eslint-config-next@13`
+
+## read $PATH
+
+show $PATH seperated by lines
+`echo $PATH | sed 's/:/\n/g' | sort | uniq -c`
