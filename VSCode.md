@@ -43,6 +43,37 @@
 | npm i                                      |                 |                                  |
 | npm run dev                                |                 |                                  |
 
+## Vite ES-Lint - `.eslintrc.cjs`
+
+Now Vite has an es-lint file
+`.eslintrc.cjs`
+
+Es-lint gives different warning in code
+
+- like variables declared but never read
+
+Sometimes es-lint is too strict and ads rules you might not want
+
+- to remove an error rule, just find name of error (by hovering over red squigly line)
+
+- open `.eslintrc.cjs` and go to `rules: {}`
+
+- add name of rule
+
+- choose how to handle... can be "off", "warn", or "error"
+
+  - "off" or 0 - error off
+  - "warn" or 1 - get yellow squigly line
+  - "error" or 2 - get red squigly
+
+- Kyle recommends turning off `react/prop-types`
+
+```js
+rules: {
+  "react/prop-types": "off"
+}
+```
+
 ## npm - json-server (run FAKE API from json files)
 
 [json-server] (https://www.npmjs.com/package/json-server)
