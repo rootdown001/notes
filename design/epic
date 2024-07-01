@@ -1,0 +1,144 @@
+## Developing a Health Assessment App Using Next.js and AI
+
+### Introduction
+
+- **Purpose**: We will create an app using JavaScript, TypeScript, and Next.js to retrieve chart notes for individuals from the Epic FHIR API and link to an AI assistant to assess signs of health decline in elderly persons.
+
+### 1. Integrate Epic FHIR API
+
+**a. Register our app with Epic to get access credentials:**
+
+- **Sign Up**: We will visit the [Epic Developer Portal](https://fhir.epic.com/) and sign up for an account.
+- **Create a New App**: Once registered, we will create a new application in the portal, filling in the required details such as the app name, description, and redirect URIs.
+- **Obtain Credentials**: After registering our app, we will receive client credentials (client ID and client secret) necessary for authenticating with the Epic API.
+
+**b. Implement OAuth2 authentication:**
+
+- **Install Dependencies**: We will install the necessary npm packages for handling OAuth2, such as `axios` for making HTTP requests and `next-auth` for authentication in Next.js.
+  ```bash
+  npm install axios next-auth
+  ```
+- **Configure Authentication**: We will set up authentication in our Next.js project by creating an API route to handle the OAuth2 flow.
+
+  ```javascript
+  // pages/api/auth/[...nextauth].js
+  import NextAuth from "next-auth";
+  import Providers from "next-auth/providers";
+
+  export default NextAuth({
+    providers: [
+      Providers.Credentials({
+        name: "Epic",
+        authorize: async (credentials) => {
+          // Implement OAuth2 logic here
+        },
+      }),
+    ],
+  });
+  ```
+
+- **OAuth2 Flow**: We will implement the OAuth2 authorization code flow to get an access token from Epic, involving redirecting the user to the Epic authorization server and handling the callback to exchange the authorization code for an access token.
+
+**c. Create functions to retrieve chart notes using the API:**
+
+- **Set Up API Requests**: Using `axios`, we will create functions to make requests to the Epic FHIR API endpoints.
+
+  ```javascript
+  import axios from "axios";
+
+  const getAccessToken = async () => {
+    // Implement the logic to get the access token using the client credentials
+  };
+
+  const getChartNotes = async (patientId) => {
+    const token = await getAccessToken();
+    const response = await axios.get(
+      `https://fhir.epic.com/interconnect-fhir-oauth/api/FHIR/DSTU2/Patient/${patientId}/DocumentReference`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    return response.data;
+  };
+  ```
+
+- **Handle API Responses**: We will parse and handle the data returned by the Epic API to extract relevant information from the chart notes.
+
+### 2. Develop the AI Assistant
+
+**a. Define the criteria and signs of decline in an elderly person's health:**
+
+- **Research and Consultation**: We will work with healthcare professionals to define the criteria for assessing health decline, which might include weight loss, changes in mobility, cognitive decline, and vital sign trends.
+- **Create a Checklist**: We will develop a checklist of symptoms and indicators to look for in the chart notes.
+
+**b. Integrate a suitable AI/ML model:**
+
+- **Select a Model**: We will use a pre-trained natural language processing (NLP) model for analyzing the text data in the chart notes. This can save us time and resources.
+- **Set Up Model Integration**: We will integrate the chosen NLP model into our Next.js project. This might involve setting up an API for the model if it’s hosted externally or using a library like TensorFlow.js if the model runs in the browser.
+
+  ```javascript
+  import * as tf from "@tensorflow/tfjs";
+
+  const loadModel = async () => {
+    const model = await tf.loadLayersModel("/path/to/model.json");
+    return model;
+  };
+
+  const analyzeHealthData = async (data) => {
+    const model = await loadModel();
+    const prediction = model.predict(tf.tensor(data));
+    return prediction;
+  };
+  ```
+
+**c. Develop functions to assess the health data for signs of decline:**
+
+- **Preprocess Data**: We will prepare the chart notes data for analysis by the AI/ML model, which may involve cleaning and structuring the data.
+  ```javascript
+  const preprocessData = (chartNotes) => {
+    // Implement data preprocessing logic here
+  };
+  ```
+- **Analyze Data**: We will use the AI/ML model to analyze the preprocessed data and identify signs of health decline.
+  ```javascript
+  const assessHealth = async (chartNotes) => {
+    const data = preprocessData(chartNotes);
+    const analysis = await analyzeHealthData(data);
+    return analysis;
+  };
+  ```
+- **Interpret Results**: We will interpret the results from the AI/ML model and provide meaningful insights or recommendations based on the analysis.
+  ```javascript
+  const interpretResults = (analysis) => {
+    // Implement logic to interpret the AI/ML model results
+  };
+  ```
+
+### 3. UI/UX Design
+
+- **Create Components and Pages**: We will create components and pages for user interaction and data visualization in our Next.js project.
+- **Design Forms and Views**: We will design forms and views for inputting patient information and displaying results.
+- **Ensure Usability**: We will ensure the app is user-friendly and accessible, focusing on a clean and intuitive interface.
+
+### 4. Testing and Deployment
+
+- **Write Tests**: We will write tests to ensure the app functions correctly, covering both unit tests and integration tests.
+- **Deploy the App**: We will deploy the app to a hosting service, ensuring it is secure and scalable.
+
+General info & disease specific
+
+report of % match to hospice
+can also look at diseases and see what in it matches - more accurate labeling for cases
+
+simple as possible for person admitting
+note chronic conditions
+
+ai needs piece of data and date
+
+provide nrrative -
+
+eventually build in degree of decline
+
+- every 60 days decline features
